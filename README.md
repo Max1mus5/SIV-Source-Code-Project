@@ -33,7 +33,7 @@ Esta carpeta se encargará de la conexión a la base de datos y a la red de Ethe
 ### `modules`
 La carpeta de módulos se organiza según el siguiente diagrama de clases, reflejando la cantidad de módulos, sus relaciones, atributos y métodos:
 
-<img src="./public/SIV_Diagrama_de_Clases.png" alt="Diagrama de clases" width="100%">
+<img src="./public/SIV_Diagrama_de_Clases.svg" alt="Diagrama de clases" width="100%">
 
 Para cada módulo, se incluyen las siguientes subcarpetas:
 
