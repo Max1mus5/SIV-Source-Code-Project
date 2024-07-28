@@ -1,6 +1,20 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const userRoutes = require('./modules/user/routes/userRoutes');
+const { sequelize } = require('./connection/db/database');
+const dotenv = require('dotenv');
+dotenv.config();
+
+app.use(express.json());
+app.use('/user', userRoutes);
+
+const port = process.env.PORT || 3000;
+
+
+
+
+
+
 
 app.get('/status', (req, res) => {
     let status = {
@@ -10,6 +24,13 @@ app.get('/status', (req, res) => {
     res.json(status);
 });
 
-app.listen(port, () => {
-    console.log(`http://localhost:${port}`);
+app.listen(port, async () => {
+    try{
+        await sequelize.sync({ alter: true });
+        console.log(`http://localhost:${port}`);
+    }
+    catch(err){
+        console.log(err);
+    }
+    
 });
