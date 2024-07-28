@@ -54,6 +54,15 @@ Utilizamos SQLite3 como base de datos. La base de datos se llamará `SIV.db` y c
 La base de datos estará contenida en `Blog-Backend/connection/db/schemas`, definiendo como "schema" a la estructura modelo para crear una tabla en la base de datos.
 Para cada modulo se va a crear un schema con los campos establecidos en [diseño de la base de datos.](#db_structure)
 
+## Rutas de la API
+
+Para ver la documentacion unicamente debes añadir `/docs` al final de la url la ruta, para facilitar la consulta de la documentacion de la API.
+
+Se implemento una API RESTful para el backend, con las siguientes rutas:
+### `/user`
+
+
+
 ## Instalación y Configuración
 
 1. **Clonar el repositorio** y **entrar en la carpeta** del proyecto:

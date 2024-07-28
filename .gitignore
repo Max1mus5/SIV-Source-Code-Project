@@ -1,5 +1,4 @@
-# Created by https://www.toptal.com/developers/gitignore/api/node,react,windows,dotenv,git,visualstudiocode,astro
-# Edit at https://www.toptal.com/developers/gitignore?templates=node,react,windows,dotenv,git,visualstudiocode,astro
+*/database.sqlite3
 
 ### Astro ###
 # Gitignore template for Astro projects
