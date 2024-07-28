@@ -1,3 +1,5 @@
+/*  this is a manual prove to be secure that the database is created correctly */
+
 const { sequelize } = require('./database.js');
 
 sequelize.sync({ force: true })
