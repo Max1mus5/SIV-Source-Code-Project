@@ -6,7 +6,6 @@
 
 Este proyecto es un blog diseñado para registrar el progreso de un semillero de investigación, utilizando tecnología blockchain para asegurar la inmutabilidad y autenticidad de los posts.
 
-# Backend
 ## Tecnologías Utilizadas
   Se desarrollo el backend utilizando Node.js, y para mejorar la eficiencia y escalabilidad del proyecto, se utilizaron las siguientes tecnologías:
 
@@ -17,7 +16,6 @@ Este proyecto es un blog diseñado para registrar el progreso de un semillero de
 - **bcryptjs**: Para hashear las contraseñas de los usuarios.
 - **jsonwebtoken (JWT)**: Para la autenticación de usuarios mediante tokens.
 - **Sequelize**: ORM para gestionar la base de datos SQLite3.
-- **Nodemon**: Para reiniciar automáticamente el servidor al guardar cambios en el código.
 
 ## Estructura del Servidor
 
@@ -31,8 +29,9 @@ Esta carpeta se encargará de la conexión a la base de datos y a la red de Ethe
 - **utils**: Funciones o servicios necesarios para relacionar los módulos con la base de datos y la red de Ethereum.
 
 ### `modules`
-La carpeta de módulos se organiza según el siguiente diagrama de clases, reflejando la cantidad de módulos, sus relaciones, atributos y métodos:
+La carpeta de módulos sera la carpeta encargada de contener una plantilla especifica para cada objeto en el diagrama de clases, permitiendo una mejor organización y escalabilidad del proyecto.
 
+Tener En cuenta la siguiente estructura de clases:
 <img src="./public/SIV_Diagrama_de_Clases.svg" alt="Diagrama de clases" width="100%">
 
 Para cada módulo, se incluyen las siguientes subcarpetas:
@@ -49,11 +48,19 @@ Esta carpeta contiene las interfaces necesarias para la validación de datos de 
 
 Utilizamos SQLite3 como base de datos. La base de datos se llamará `SIV.db` y contendrá las siguientes tablas y relaciones, basadas en el diagrama implementado para las clases:
 
-<img src="./public/SIV_DB_Estructura.png" alt="DB_structure" width="100%">
+<img id="db_structure" src="./public/SIV_DB_Estructura.png" alt="DB_structure" width="100%">
+
+La base de datos estará contenida en `Blog-Backend/connection/db/schemas`, definiendo como "schema" a la estructura modelo para crear una tabla en la base de datos.
+Para cada modulo se va a crear un schema con los campos establecidos en [diseño de la base de datos.](#db_structure)
 
 ## Instalación y Configuración
 
-1. **Clonar el repositorio**.
+1. **Clonar el repositorio** y **entrar en la carpeta** del proyecto:
+    ```bash
+    git clone https://github.com/Max1mus5/SIV-Source-Code-Project.git
+    cd SIV-Source-Code-Project
+    cd Blog-Backend
+    ```
 
 
 2. **Instalar las dependencias**:
