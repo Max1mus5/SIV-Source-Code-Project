@@ -5,7 +5,7 @@ const Notification = sequelize.define("Notification", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    allowNull: false,
+    autoIncrement: true,
   },
   type:{
     type: DataTypes.STRING,

@@ -5,7 +5,7 @@ const Config = sequelize.define("Config", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    allowNull: false,
+    autoIncrement: true,
   },
   user_id: {
     type: DataTypes.INTEGER,
