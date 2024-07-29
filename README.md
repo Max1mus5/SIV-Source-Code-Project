@@ -42,9 +42,6 @@ Para cada módulo, se incluyen las siguientes subcarpetas:
 - **routes**: Define las rutas de la aplicación y valida los datos enviados a la API.
 - **utils**: Contiene la lógica o servicios que requiere la aplicación.
 
-### `interfaces`
-Esta carpeta contiene las interfaces necesarias para la validación de datos de cada módulo, asegurando que se integren correctamente los métodos para cada clase implementada.
-
 ## Base de Datos
 
 Utilizamos SQLite3 como base de datos. La base de datos se llamará `SIV.db` y contendrá las siguientes tablas y relaciones, basadas en el diagrama implementado para las clases:
@@ -90,14 +87,6 @@ Se implemento una API RESTful para el backend, con las siguientes rutas:
     ```bash
     npm run dev
     ```
-
-## Contribución
-
-1. **Fork el repositorio**
-2. **Crea una nueva rama** (`git checkout -b feature/nueva-funcionalidad`)
-3. **Haz commit de tus cambios** (`git commit -am 'Añadir nueva funcionalidad'`)
-4. **Haz push a la rama** (`git push origin feature/nueva-funcionalidad`)
-5. **Abre una Pull Request**
 
 ## Licencia
 
