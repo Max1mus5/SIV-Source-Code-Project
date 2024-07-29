@@ -1,11 +1,14 @@
+
 class User {
-    constructor(id, username, email, password, bio, role) {
+    constructor(id, username, email, password, bio, role, urlImage,roleInstance) {
         this._id = id;
         this._username = username;
         this._email = email;
         this._password = password;
         this._bio = bio;
         this._role = role;
+        this._profileImage = urlImage;
+        this._roleInstance = roleInstance;
     }
 
     get id() {
@@ -54,6 +57,32 @@ class User {
 
     set role(value) {
         this._role = value;
+    }
+
+    get profileImage() {
+        return this._profileImage;
+    }
+
+    set profileImage(value) {
+        this._profileImage = value;
+    }
+
+    get roleInstance() {
+        return this._roleInstance;
+    }
+
+    /* method for view the info of the user */
+
+    toJSON() {
+        return {
+            id: this._id,
+            username: this._username,
+            email: this._email,
+            bio: this._bio,
+            role: this._role,
+            profileImage: this._profileImage,
+            ...this._roleInstance && this._roleInstance.toJSON()
+        };
     }
 }
 

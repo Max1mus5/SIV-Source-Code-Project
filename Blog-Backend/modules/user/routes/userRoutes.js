@@ -1,13 +1,13 @@
 // modules/user/routes.js
 const express = require('express');
 const router = express.Router();
-const UserController = require('../controller/userControler');
+const UserController = require('../controller/userController');
 
 // Documentacion de la ruta
 router.get('/docs', (req, res) => {
-  /* retornar un jason con cada metodo en la ruta o que paremtros necesita */
+  //region:Documentation
   res.json({
-    register: {
+    "/register": {
         description: 'Register',
         method: 'POST',
         params: {
@@ -18,18 +18,17 @@ router.get('/docs', (req, res) => {
             role: 'String'
         }
     },
-    getUser: {
+    "/username": {
         description: 'Get user by username',
         method: 'GET',
         params: {
             username: 'String'
         }
     },
-    updateUser: {
+    "/:username": {
         description: 'Update user',
         method: 'PUT',
-        params: {
-            id: 'String',
+        optional_params: {
             username: 'String',
             email: 'String',
             password: 'String',
@@ -37,8 +36,8 @@ router.get('/docs', (req, res) => {
             role: 'String'
         }
     },
-    deleteUser: {
-        description: 'Delete user',
+    "/deleteUser": {
+        description: 'Delete user by username',
         method: 'DELETE',
         params: {
             id: 'String'
@@ -58,33 +57,24 @@ router.post('/register', async (req, res) => {
     }
 });
 
-
-/* como seria un ejemplo de post para registe?
-{
-    "username": "test",
-    "email": "
-    "password": "Test1234",
-    "bio": "Test bio",
-    "role": "admin"
-}
-
-
-*/
-
 // Obtener usuario por username
 router.get('/:username', async (req, res) => {
     try {
         const user = await UserController.findUserByUsername(req.params.username);
-        res.status(200).json(user);
+        if (user) {
+            res.status(200).json(user);
+        } else {
+            res.status(404).json({ message: 'Usuario no encontrado' });
+        }   
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
 // Actualizar usuario
-router.put('/:id', async (req, res) => {
+router.put('/updateUser', async (req, res) => {
     try {
-        const user = await UserController.updateUser(req.params.id, req.body);
+        const user = await UserController.updateUser(req.body);
         res.status(200).json(user);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -92,9 +82,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // Eliminar usuario
-router.delete('/:id', async (req, res) => {
+router.delete('/delete/:username', async (req, res) => {
     try {
-        await UserController.deleteUser(req.params.id);
+        await UserController.deleteUser(req.params.username);
         res.status(200).json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
         res.status(400).json({ error: error.message });

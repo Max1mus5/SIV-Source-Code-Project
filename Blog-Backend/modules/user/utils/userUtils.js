@@ -18,6 +18,27 @@ const validateEmail = (email) => {
   return emailRegex.test(email.toLowerCase());
 }
 
+const validateRole = (role) => {
+  const roles = ['reader', 'autor', 'admin'];
+  return roles.includes(role);
+}
+
+ /* filtrer data function */
+const filterData = async (transaction, userSchema, updateData) => {
+  const user = await userSchema.findOne({ where: { name: updateData.username } });
+  const filteredData = {};
+  for (const key in updateData) {
+    if (updateData[key] !== undefined && updateData[key] !== null && updateData[key] !== "") {
+      filteredData[key] = user[key];
+    } 
+    filteredData[key] = updateData[key];
+  }
+  return filteredData;
+}
+
+
+
+
 
 
 
@@ -29,4 +50,6 @@ module.exports = {
   hashPassword, 
   validatePassword,
   validateEmail,
+  filterData,
+  validateRole
 };
