@@ -6,6 +6,7 @@ const User = sequelize.define('User', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
+    unique: true,
     autoIncrement: true,
   },
   name: {
@@ -29,6 +30,18 @@ const User = sequelize.define('User', {
   role: {
     type: DataTypes.ENUM('admin', 'author', 'reader'),
     defaultValue: 'reader',
+  },
+  profileImage: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  favorites:{
+    type: DataTypes.ARRAY(DataTypes.INTEGER),//Array of post ids
+    allowNull: true
+  },
+  posts:{
+    type: DataTypes.ARRAY(DataTypes.INTEGER),//Array of post ids
+    allowNull: true
   },
 });
 
