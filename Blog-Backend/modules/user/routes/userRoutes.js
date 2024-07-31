@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../controller/userController');
+const LoginController = require('../controller/login');
 
 // Documentacion de la ruta
 router.get('/docs', (req, res) => {
@@ -16,6 +17,14 @@ router.get('/docs', (req, res) => {
             password: 'String',
             bio: 'String',
             role: 'String'
+        }
+    },
+    "/login": {
+        description: 'Login and token generation',
+        method: 'POST',
+        params: {
+            username: 'String',
+            password: 'String'
         }
     },
     "/username": {
@@ -52,6 +61,21 @@ router.post('/register', async (req, res) => {
     try {
         const user = await UserController.createUser(req.body);
         res.status(201).json(user);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Iniciar sesion
+router.post('/login', async (req, res) => {
+    try {
+        const token = await LoginController.login(req, res);
+        if  (token) {
+            res.status(200).json({token: token});
+        }
+        else {
+            res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
+        }
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

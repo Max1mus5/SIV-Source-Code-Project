@@ -8,9 +8,11 @@ const validatePassword = (password) => {
 
 // Function to hash password
 const hashPassword = async (password) => {
-  const hashedPassword = await bcrypt.hash(password, 16);
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
   return hashedPassword;
 };
+
 
 // verify Email
 const validateEmail = (email) => {
