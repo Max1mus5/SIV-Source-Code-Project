@@ -12,13 +12,13 @@ class LoginController {
             const user = await UserSchema.findOne({ where: { name : username } });
 
             if (!user) {
-                return res.status(401).json({ message: 'Invalid username' });
+                return 'Invalid username';
             }
             
             const validPassword = await bcrypt.compareSync(password, user.password);
 
             if (!validPassword) {
-                return res.status(401).json({ message: 'Invalid password' });
+                return  'Invalid password';
             }
 
             const token = generateToken({ id: user.id, username: user.username, role: user.role }, secretKey);

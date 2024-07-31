@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('../controller/userController');
 const LoginController = require('../controller/login');
+const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
 
 // Documentacion de la ruta
 router.get('/docs', (req, res) => {
@@ -76,13 +77,13 @@ router.post('/login', async (req, res) => {
         else {
             res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
         }
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+    } catch (token) {
+        res.status(400).json({ error: token });
     }
 });
 
 // Obtener usuario por username
-router.get('/:username', async (req, res) => {
+router.get('/:username', authenticateToken, async (req, res) => {
     try {
         const user = await UserController.findUserByUsername(req.params.username);
         if (user) {
@@ -96,7 +97,7 @@ router.get('/:username', async (req, res) => {
 });
 
 // Actualizar usuario
-router.put('/updateUser', async (req, res) => {
+router.put('/updateUser', authenticateToken, async (req, res) => {
     try {
         const user = await UserController.updateUser(req.body);
         res.status(200).json(user);
@@ -106,7 +107,7 @@ router.put('/updateUser', async (req, res) => {
 });
 
 // Eliminar usuario
-router.delete('/delete/:username', async (req, res) => {
+router.delete('/delete/:username', authenticateToken, async (req, res) => {
     try {
         await UserController.deleteUser(req.params.username);
         res.status(200).json({ message: 'Usuario eliminado correctamente' });

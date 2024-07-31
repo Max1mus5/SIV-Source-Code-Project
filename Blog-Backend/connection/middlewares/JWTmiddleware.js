@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
 
 // verify token
-function authenticateToken(req, res, next, secretKey) {
-    const token = req.headers['authorization'];
-
+function authenticateToken(req, res, next) {
+    const token = req.headers['token'];
+    const secretKey = process.env.JWT_SECRET;   
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, secretKey, (err, user) => {
@@ -15,7 +15,7 @@ function authenticateToken(req, res, next, secretKey) {
 
 // create token
 function generateToken(user, secretKey) {
-    return jwt.sign(user, secretKey, { expiresIn: '24h' });
+    return jwt.sign(user, secretKey, { expiresIn: '4h' });
 }
 
 module.exports = {
