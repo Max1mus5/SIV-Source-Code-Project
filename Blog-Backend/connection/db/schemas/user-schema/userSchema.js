@@ -43,6 +43,11 @@ const User = sequelize.define('User', {
     type: DataTypes.ARRAY(DataTypes.INTEGER),//Array of post ids
     allowNull: true
   },
+  validationToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
 });
 
 module.exports = { User };
