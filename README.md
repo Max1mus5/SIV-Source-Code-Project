@@ -17,6 +17,7 @@ Este proyecto es un blog diseñado para registrar el progreso de un semillero de
 - **bcryptjs**: Para hashear las contraseñas de los usuarios.
 - **jsonwebtoken (JWT)**: Para la autenticación de usuarios mediante tokens.
 - **Sequelize**: ORM para gestionar la base de datos SQLite3.
+- **NodeMailer**: Para enviar correos electrónicos de verificación y recuperación de contraseñas.
 
 ## Estructura del Servidor
 
