@@ -58,6 +58,14 @@ Para ver la documentacion unicamente debes añadir `/docs` al final de la url la
 
 Se implemento una API RESTful para el backend, con las siguientes rutas:
 ### `/user`
+### `/reset`
+
+
+## Middleware
+
+Se implementaron los siguientes middlewares para la autenticación de usuarios y envio de correos electronicos para recuperear contraseña:
+> **JWTmiddleware** verifica si el token enviado por el cliente es válido y si el usuario tiene permisos para acceder a la ruta solicitada.
+> **emailHelper** verifica si el correo electronico enviado por el cliente es valido y permite crear una nueva contraseña de ser asi.
 
 
 
@@ -82,6 +90,10 @@ Se implemento una API RESTful para el backend, con las siguientes rutas:
     PORT=
     JWT_SECRET=
     DATABASE_URL=
+    BACKEND_URL=
+    SIV_EMAIL="" # email who sends the emails between ""
+    SIV_APP_PASSWORD="" #enable double step verification security in your account and after go to: https://myaccount.google.com/apppasswords
+
     ```
 
 4. **Iniciar el servidor con nodemon**:
