@@ -101,10 +101,6 @@ class UserController {
         try {
             const name = updateData.username;
 
-            if(!validateUniqueUsername(updateData.username)){
-                throw new Error("Username already exists.");
-            }
-
             if (updateData.password) {
                 if (!validatePassword(updateData.password)) {
                     throw new Error("Password must contain 8 characters, 1 uppercase, 1 number, and 1 special character.");
@@ -121,7 +117,7 @@ class UserController {
             }
 
             //filter data sended
-            const filteredUpdateData = await filterData(transaction,UserSchema,updateData);
+            const filteredUpdateData = await filterData(UserSchema,updateData);
 
             const [rowsUpdated] = await UserSchema.update(
                 filteredUpdateData,

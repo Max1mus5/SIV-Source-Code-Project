@@ -21,8 +21,7 @@ class LoginController {
                 return  'Invalid password';
             }
 
-            const token = generateToken({ id: user.id, username: user.username, role: user.role }, secretKey);
-
+            const token = generateToken({ id: user.id, username: user.username, role: user.role }, secretKey, 14400);
             return token;
         } catch (error) {
             return error.message;

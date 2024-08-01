@@ -4,11 +4,20 @@ const router = express.Router();
 const UserController = require('../controller/userController');
 const LoginController = require('../controller/login');
 const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
+const  emailHelper = require('../../../connection/middlewares/emailHelper');
+const sendPasswordResetEmail = require('../../../connection/utils/recoverPassword')
 
 // Documentacion de la ruta
 router.get('/docs', (req, res) => {
-  //region:Documentation
+  //region Documentation
   res.json({
+    "/recoverPassword": {
+        description: 'send Email for recover password',
+        method: 'POST',
+        params: {
+            email: 'String'
+        }
+    },
     "/register": {
         description: 'Register',
         method: 'POST',
@@ -26,7 +35,8 @@ router.get('/docs', (req, res) => {
         params: {
             username: 'String',
             password: 'String'
-        }
+        },
+        returns: "access Token"
     },
     "/username": {
         description: 'Get user by username',
@@ -56,6 +66,30 @@ router.get('/docs', (req, res) => {
           });
 });
 
+/* // send mail
+router.post("/sendEmail", async (req, res) => {
+    const { to, subject, text } = req.body;
+  
+    try {
+      let info = await emailHelper(to, subject, text);
+      res.status(200).send(`Email sent: ${info.response}`);
+    } catch (error) {
+      res.status(500).send("Error sending email");
+    }
+  }); */
+
+// recover password
+router.post("/recoverPassword", async (req, res) => {
+    try {
+      const  email = req.body.email;
+      let info = await sendPasswordResetEmail(email);
+      console.log(info);
+      res.status(200).send(`Recover password link sended to Email sent: ${info.response}`);
+    } catch (error) {
+      res.status(500).json({"Error sending email":error.message});
+    }
+  }
+);
 
 // Crear usuario
 router.post('/register', async (req, res) => {

@@ -26,7 +26,7 @@ const validateRole = (role) => {
 }
 
  /* filtrer data function */
-const filterData = async (transaction, userSchema, updateData) => {
+const filterData = async ( userSchema, updateData) => {
   const user = await userSchema.findOne({ where: { name: updateData.username } });
   const filteredData = {};
   for (const key in updateData) {
@@ -37,12 +37,6 @@ const filterData = async (transaction, userSchema, updateData) => {
   }
   return filteredData;
 }
-
-
-
-
-
-
 
 
 
