@@ -14,8 +14,8 @@ function authenticateToken(req, res, next) {
 }
 
 // create token
-function generateToken(user, secretKey) {
-    return jwt.sign(user, secretKey, { expiresIn: '4h' });
+function generateToken(user, secretKey, time) {
+    return jwt.sign(user, secretKey, { expiresIn: `${time}s` });
 }
 
 module.exports = {
