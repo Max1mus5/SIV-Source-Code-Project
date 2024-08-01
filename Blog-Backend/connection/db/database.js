@@ -10,7 +10,24 @@ sequelize.authenticate()
   .then(() => console.log('Connection has been established successfully.'))
   .catch(err => console.error('Unable to connect to the database:', err));
 
-module.exports = {sequelize};
+async function backupUserData() {
+    try {
+      // Consulta SQL para copiar datos a la tabla de respaldo
+      const query = `
+        INSERT OR IGNORE INTO Users_backup SELECT id, name, email, password, bio, role, profileImage, favorites, posts, validationToken, tokenExpiration, createdAt, updatedAt FROM Users;
+      `;
+      // Ejecuta la consulta
+      await sequelize.query(query);
+      console.log('Backup completed successfully.');
+    } catch (error) {
+      console.error('Error during backup:', error);
+    }
+  }
+  
+  // Llama a la función para realizar la copia de seguridad
+backupUserData();
+  
+module.exports = { sequelize, backupUserData };
 
 
 const { User } = require('./schemas/user-schema/userSchema');
