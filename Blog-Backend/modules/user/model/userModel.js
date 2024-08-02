@@ -1,6 +1,6 @@
 
 class User {
-    constructor(id, username, email, password, bio, role, urlImage,roleInstance) {
+    constructor(id, username, email, password, bio, role, urlImage,roleInstance, validationToken, tokenExpiration) {
         this._id = id;
         this._username = username;
         this._email = email;
@@ -9,6 +9,8 @@ class User {
         this._role = role;
         this._profileImage = urlImage;
         this._roleInstance = roleInstance;
+        this._validationToken = validationToken;
+        this._tokenExpiration = tokenExpiration;
     }
 
     get id() {
@@ -69,6 +71,22 @@ class User {
 
     get roleInstance() {
         return this._roleInstance;
+    }
+
+    get validationToken() {
+        return this._validationToken;
+    }
+
+    set validationToken(value) {
+        this._validationToken = value;
+    }
+
+    get tokenExpiration() {
+        return this._tokenExpiration;
+    }
+
+    set tokenExpiration(value) {
+        this._tokenExpiration = value
     }
 
     /* method for view the info of the user */

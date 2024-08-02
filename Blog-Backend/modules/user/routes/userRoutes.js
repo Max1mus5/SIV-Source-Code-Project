@@ -4,8 +4,9 @@ const router = express.Router();
 const UserController = require('../controller/userController');
 const LoginController = require('../controller/login');
 const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
-const  emailHelper = require('../../../connection/middlewares/emailHelper');
-const sendPasswordResetEmail = require('../../../connection/utils/recoverPassword')
+const { sendPasswordResetEmail, passwordSendResetEmail } = require('../../../connection/utils/recoverPassword')
+
+
 
 // Documentacion de la ruta
 router.get('/docs', (req, res) => {
@@ -27,6 +28,16 @@ router.get('/docs', (req, res) => {
             password: 'String',
             bio: 'String',
             role: 'String'
+        },
+        returns: "user created in database temporaly and send a email for verify account, if dosent verify account in 20 minutes the account will be deleted"
+    },
+
+    "/verify/:token": {
+        DANGER: "only you have 20 minutes to verify the account, if you dont verify the account in 20 minutes the account will be deleted :)",
+        description: 'Route to verify account by email, updates the database and deletes the token',
+        method: 'get',
+        params: {
+            none,
         }
     },
     "/login": {
@@ -43,6 +54,11 @@ router.get('/docs', (req, res) => {
         method: 'GET',
         params: {
             username: 'String'
+        },
+        Headers:{
+            depends: True,
+            key: "token",
+            value: "token"
         }
     },
     "/:username": {
@@ -54,6 +70,11 @@ router.get('/docs', (req, res) => {
             password: 'String',
             bio: 'String',
             role: 'String'
+        },
+        Headers:{
+            depends: True,
+            key: "token",
+            value: "token"
         }
     },
     "/deleteUser": {
@@ -62,27 +83,35 @@ router.get('/docs', (req, res) => {
         params: {
             id: 'String'
         }
-              }
+              },
+        Headers:{
+            depends: True,
+            key: "token",
+            value: "token"
+        }
           });
 });
 
-/* // send mail
-router.post("/sendEmail", async (req, res) => {
-    const { to, subject, text } = req.body;
-  
+// verify account by email
+router.get("/verify/:token", async (req, res) => {
     try {
-      let info = await emailHelper(to, subject, text);
-      res.status(200).send(`Email sent: ${info.response}`);
+      message = await UserController.verifyToken(req.params.token);
+      res.status(200).json(`${message} Ya Puedes Cerrar Esta Pestaña`);
     } catch (error) {
-      res.status(500).send("Error sending email");
+      res.status(500).send("Error verifying email");
     }
-  }); */
+  }); 
 
 // recover password
 router.post("/recoverPassword", async (req, res) => {
     try {
       const  email = req.body.email;
-      let info = await sendPasswordResetEmail(email);
+      let data = await sendPasswordResetEmail(email);
+       //actualizar en base de datos
+      let dataUpdated = await UserController.updateUser(data);
+      console.log('Token actualizado en la base de datos:', dataUpdated);
+
+      let info = await passwordSendResetEmail(email, data.validationToken);
       console.log(info);
       res.status(200).send(`Recover password link sended to Email sent: ${info.response}`);
     } catch (error) {
@@ -95,7 +124,7 @@ router.post("/recoverPassword", async (req, res) => {
 router.post('/register', async (req, res) => {
     try {
         const user = await UserController.createUser(req.body);
-        res.status(201).json(user);
+        res.status(201,user).json('Se ha enviado un correo de verificacion a su email');
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

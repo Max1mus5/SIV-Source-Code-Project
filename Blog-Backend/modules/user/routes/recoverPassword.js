@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware'); // Importar el middleware JWT
 const UserController = require('../controller/userController');
-const resetPassword = require('../utils/passwordUtils');
+const searchByToken = require('../utils/passwordUtils');
 const PasswordController = require('../controller/passwordController');
 
 // Ruta para restablecer la contraseña
@@ -18,7 +18,7 @@ router.put('/:token', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Nueva contraseña requerida.' });
         }
 
-        let user = await resetPassword(token); // search the user by token
+        let user = await searchByToken(token); // search the user by token
         let newUser = {
             username: user.name,
             password: newPassword

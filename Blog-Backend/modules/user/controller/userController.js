@@ -1,8 +1,10 @@
 const { sequelize } = require('../../../connection/db/database'); // Sequelize User model
 const { User: UserSchema} = require('../../../connection/db/schemas/user-schema/userSchema'); // Sequelize User schema
-const User = require('../model/userModel'); // Class User
 const UserInstance = require('../model/userInstance');
 const { hashPassword, validatePassword, validateEmail, filterData, validateRole } = require('../utils/userUtils');
+const searchByToken = require('../utils/passwordUtils')
+const {sendVerificationEmail} = require('../../../connection/utils/recoverPassword')
+const {generateToken} = require('../../../connection/middlewares/JWTmiddleware');
 
 // validate Unique Username
 const validateUniqueUsername = async (  name ) => {
@@ -37,6 +39,9 @@ class UserController {
                 throw new Error("Email already exists.");
             }
 
+            //token for verify account
+            let token = generateToken({username:userData.username, email:userData.email}, process.env.JWT_SECRET, 1200 );
+            let tokenExpiration = (Date.now() + 1200).toString(); // 20 minutos
             const hashedPassword = await hashPassword(userData.password);
             const role = userData.role && userData.role.trim() !== '' ? userData.role : 'reader';
             const newUser = UserInstance.createUser(// make a new user and return it whit his instances
@@ -46,8 +51,12 @@ class UserController {
                 hashedPassword,
                 userData.bio,
                 role,
-                userData.profileImage
+                userData.profileImage, 
             );
+
+            newUser.validationToken = token;
+            newUser.tokenExpiration = tokenExpiration;
+
 
             if (role === 'author') {
                 newUser.posts = []; 
@@ -62,10 +71,16 @@ class UserController {
                 profileImage: newUser.profileImage || '',
                 favorites: newUser.roleInstance.favorites || [],
                 posts: newUser.roleInstance.posts || [],
+                validationToken: newUser.validationToken,
+                tokenExpiration: newUser.tokenExpiration
             }, { transaction });
-
             newUser.id = user.id; // Set the ID of the class instance
+
             await transaction.commit();
+
+            
+            let info = await sendVerificationEmail(newUser.email, newUser.validationToken);
+            console.log("correo enviado correctamente.\n");
             return newUser;
         } catch (error) {
             await transaction.rollback();
@@ -94,6 +109,14 @@ class UserController {
         } catch (error) {
             throw new Error(error.message);
         }
+    }
+
+    async verifyToken(token){
+        const user = await searchByToken(token);
+        console.log(user);
+        let message = `Hola!! ${user.name} tu cuenta ha sido verificada con exito.`;
+        
+        return message;
     }
 
     async updateUser(updateData) {
