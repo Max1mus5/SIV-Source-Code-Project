@@ -9,7 +9,7 @@ const Posts = sequelize.define("Posts", {
   },
   autor_id:{
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: false,w
   },
   date:{
     type: DataTypes.STRING,
