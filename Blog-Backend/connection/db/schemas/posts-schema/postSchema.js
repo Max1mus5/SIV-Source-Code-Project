@@ -9,7 +9,7 @@ const Posts = sequelize.define("Posts", {
   },
   autor_id:{
     type: DataTypes.INTEGER,
-    allowNull: false,w
+    allowNull: false
   },
   date:{
     type: DataTypes.STRING,
@@ -34,7 +34,12 @@ const Posts = sequelize.define("Posts", {
   hashBlockchain:{
     type: DataTypes.STRING,
     allowNull: true, //RECORDAR MODIFICAR ESTE CAMPO CUANDO SE IMPLEMENTE LA BLOCKCHAIN
-  }
+  },
+  comments:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
 });
   
 module.exports = { Posts };
