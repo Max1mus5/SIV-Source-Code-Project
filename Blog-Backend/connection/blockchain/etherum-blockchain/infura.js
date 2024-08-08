@@ -8,3 +8,5 @@ var web3 = new Web3(web3Provider);
 web3.eth.getBlockNumber().then((result) => {
   console.log("Latest Ethereum Block is ", result);
 });
+
+module.exports = { web3 };

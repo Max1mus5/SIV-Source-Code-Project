@@ -1,43 +1,60 @@
-// postController.js
 const PostModel = require('../model/postModel'); // modelo de la clase POST
-const { web3Url } = require('../../../connection/blockchain/etherum-blockchain/infura') // conexion a la blockchain desde infura
-const { ipfsAPI_connection } = require('../../../connection/blockchain/IPFS/ipfs') // conexion a IPFS para subir archivos
+const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema')
+const { web3 } = require('../../../connection/blockchain/etherum-blockchain/infura') // conexion a la blockchain desde infura
+const { ipfsAPI_connection, uploadImageToIPFS } = require('../../../connection/blockchain/IPFS/ipfs') // conexion a IPFS para subir archivos
 
 class PostController {
     // Create a new post
     async createPost(postData) {
         try {
-            // Save the post content to IPFS
-            const ipfsResult = await ipfs.add(Buffer.from(postData.content));
+
+            // Validación de datos
+            if (!postData.autor || !postData.title || !postData.content || !postData.image) {
+                throw new Error('Todos los campos requeridos deben estar presentes.');
+            }
+
+            //subir imagen a IPFS
+            if (postData.image) {
+                const imageHash = await uploadImageToIPFS(postData.image);
+                postData.image = imageHash;
+            }
+
+            // Guardar el contenido del post en IPFS
+            const ipfsConnection = ipfsAPI_connection; // Accede a la función específica
+            const ipfsResult = await ipfsConnection.add(Buffer.from(postData.content));
             const ipfsHash = ipfsResult[0].hash;
 
-            // Create a transaction to store the IPFS hash on the blockchain
+            // Crear una transacción para almacenar el hash de IPFS en la blockchain
             const transaction = {
-                // Define transaction parameters here, e.g., from, to, gas, etc.
                 data: web3.utils.toHex(ipfsHash)
             };
 
-            // Send the transaction
+            // Enviar la transacción
             const receipt = await web3.eth.sendTransaction(transaction);
 
-            // Create a post instance with the transaction hash and other data
+            // Crear una instancia de post con el hash de la transacción y otros datos
             const newPost = new PostModel({
-                author: postData.author,
-                date: new Date(),
+                autor: postData.autor,
+                date: new Date().toString(),
                 title: postData.title,
                 hashBlockchain: receipt.transactionHash,
-                content: ipfsHash, // Storing the IPFS hash
+                content: ipfsHash,
                 image: postData.image,
                 likes: 0,
-                comments: []
+                comments: postData.comments || ''
             });
 
-            // Save the new post instance in the database
-            await newPost.save();
+            //save in the database
+            const post = new Posts(newPost);
+            await post.save();
 
-            return newPost;
+            console.log(newPost);
+
+            console.log(`Nuevo post creado con hash de IPFS: ${ipfsHash} y hash de transacción: ${receipt.transactionHash}`);
+
+            return post;
         } catch (error) {
-            throw new Error(`Error creating post: ${error.message}`);
+            throw new Error(`Error al crear el post: ${error.message}`);
         }
     }
 }
