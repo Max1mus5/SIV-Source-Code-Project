@@ -7,15 +7,23 @@ class PostController {
             if (!postData.autor || !postData.title || !postData.content || !postData.image) {
                 throw new Error('Todos los campos requeridos deben estar presentes.');
             }
-
-            const newPost = new PostModel({
-                autor: postData.autor,
+            /*validar si postdata.autor es un numero */
+            if (isNaN(postData.autor)) {
+               try {	
+                postData.autor = parseInt(postData.autor);
+                }
+               catch (error) {
+                throw new Error('El autor debe ser un número.');
+                }
+            }
+            const newPost = new Posts({
+                autor_id: postData.autor,
                 date: new Date().toISOString(), 
                 title: postData.title,
                 content: postData.content,
-                image: postData.image,
+                post_image: postData.image,
                 likes: 0,
-                comments: postData.comments || []
+                comments: postData.comments || ""
             });
 
             await newPost.save();
