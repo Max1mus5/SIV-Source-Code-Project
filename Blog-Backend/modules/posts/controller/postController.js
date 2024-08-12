@@ -18,17 +18,23 @@ class PostController {
                 }
             }
 
-            //hashear el contenido del post
-            const contentHash = web3.utils.sha3(postData.content);
+            try{
+                //hashear el contenido del post
+                const contentHash = web3.utils.sha3(postData.content);
 
-            //enviar hash a BC
-            const receipt = await web3.eth.sendTransaction({
-                from: process.env.WALLET_ADDRESS,
-                to: process.env.CONTRACT_ADDRESS,
-                data: contentHash
-            });
+                //enviar hash a BC
+                const receipt = await web3.eth.sendTransaction({
+                    from: process.env.WALLET_ADDRESS,
+                    to: process.env.CONTRACT_ADDRESS,
+                    data: contentHash
+                });
 
-            const blockchainResponse = {"transactionHash": receipt.transactionHash, "contentHash": contentHash};
+                const blockchainResponse = {"transactionHash": receipt.transactionHash, "contentHash": contentHash};
+                print(blockchainResponse);
+            }catch(error){
+                console.error(`Error al enviar el hash a la blockchain: ${error.message}`); 
+                throw error;
+            }
 
             const newPost = new Posts({
                 autor_id: postData.autor,
