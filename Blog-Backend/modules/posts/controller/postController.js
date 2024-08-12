@@ -1,5 +1,6 @@
 const PostModel = require('../model/postModel'); 
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema'); 
+const { web3 } = require('../../../connection/blockchain/etherum-blockchain/infura');
 
 class PostController {
     async createPost(postData) {
@@ -16,6 +17,19 @@ class PostController {
                 throw new Error('El autor debe ser un número.');
                 }
             }
+
+            //hashear el contenido del post
+            const contentHash = web3.utils.sha3(postData.content);
+
+            //enviar hash a BC
+            const receipt = await web3.eth.sendTransaction({
+                from: process.env.WALLET_ADDRESS,
+                to: process.env.CONTRACT_ADDRESS,
+                data: contentHash
+            });
+
+            const blockchainResponse = {"transactionHash": receipt.transactionHash, "contentHash": contentHash};
+
             const newPost = new Posts({
                 autor_id: postData.autor,
                 date: new Date().toISOString(), 
@@ -23,7 +37,8 @@ class PostController {
                 content: postData.content,
                 post_image: postData.image,
                 likes: 0,
-                comments: postData.comments || ""
+                comments: postData.comments || "",
+                hashBlockchain: receipt.transactionHash
             });
 
             await newPost.save();
