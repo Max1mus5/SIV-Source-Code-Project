@@ -14,13 +14,15 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
     "express": "^4.19.2",
     "ipfs-api": "^26.1.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.14",
     "sequelize": "^6.37.3",
     "sqlite3": "^5.1.7",
-    "web3": "^4.11.1"
+    "web3": "^4.11.1",
+    "web3modal": "^1.9.12"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
