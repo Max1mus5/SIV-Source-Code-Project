@@ -1,6 +1,5 @@
 const PostModel = require('../model/postModel'); 
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema'); 
-const { web3 } = require('../../../connection/blockchain/etherum-blockchain/infura');
 
 class PostController {
     async createPost(postData) {
