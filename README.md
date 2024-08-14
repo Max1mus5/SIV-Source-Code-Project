@@ -58,6 +58,7 @@ Para ver la documentacion unicamente debes añadir `/docs` al final de la url la
 Se implemento una API RESTful para el backend, con las siguientes rutas:
 ### `/user`
 ### `/reset`
+### `/post`
 
 
 ## Middleware
