@@ -3,7 +3,7 @@ const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchem
 
 class PostController {
     async createPost(postData) {
-        const web3Conection = web3; // asignar coneccion a web3 desde infura.js
+        const web3Conection = web3; 
         const gasPrice = await web3.eth.getGasPrice();
         console.log(`Gas Price: ${gasPrice}`);
 
