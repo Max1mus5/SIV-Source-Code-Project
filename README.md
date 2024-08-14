@@ -10,14 +10,13 @@ Este proyecto es un blog diseñado para registrar el progreso de un semillero de
 ## Tecnologías Utilizadas
   Se desarrollo el backend utilizando Node.js, y para mejorar la eficiencia y escalabilidad del proyecto, se utilizaron las siguientes tecnologías:
 
-- **Web3.js**: Para interactuar con la red de Ethereum.
-- **Infura**: Para conectarse a la red de Ethereum en el servidor.
 - **SQLite3**: Base de datos relacional ligera.
 - **Express**: Framework para Node.js, facilitando la creación de APIs RESTful.
 - **bcryptjs**: Para hashear las contraseñas de los usuarios.
 - **jsonwebtoken (JWT)**: Para la autenticación de usuarios mediante tokens.
 - **Sequelize**: ORM para gestionar la base de datos SQLite3.
 - **NodeMailer**: Para enviar correos electrónicos de verificación y recuperación de contraseñas.
+- **Crytpo**: Utilizaremos crypto para generar los bloques de la blockchain.
 
 ## Estructura del Servidor
 
