@@ -47,11 +47,20 @@ La cadena de bloques (blockchain) es una lista enlazada de bloques, donde cada b
 ### 3. **Transacciones**
 Las publicaciones de blog se manejan como transacciones dentro de la blockchain. Cada transacción contiene información sobre el autor, el contenido de la publicación, y la marca de tiempo.
 
-[*ver codigo*](../blockchain/transactions/)
+[*ver codigo*](../blockchain/transactions/transaction.js)
 
 ### 4. **Nodos**
 
+Los nodos son los participantes de la red blockchain. Cada nodo tiene una copia de la cadena de bloques y puede validar las transacciones. Los nodos se comunican entre sí para mantener la integridad de la cadena y llegar a un consenso sobre el estado de la red.
+
+[*ver codigo*](../blockchain/nodes/nodes.js)
+
 ### 5. **Mecanismo de Consenso**
+
+El mecanismo de consenso es el proceso mediante el cual los nodos de la red llegan a un acuerdo sobre el estado de la cadena de bloques. En este caso, se utiliza un mecanismo de consenso de Prueba de Trabajo (Proof of Work) para validar los bloques y asegurar la integridad de la cadena.
+
+[*ver codigo*](../blockchain/sync/consense.js)
+
 
 ## Funcionamiento General
 
