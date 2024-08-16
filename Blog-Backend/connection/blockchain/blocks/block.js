@@ -1,16 +1,30 @@
-/* definicion de un blocque en la blockchain */
 const crypto = require('crypto');
-class Block{
-  constructor(index, timestamp, transactions, previousHash = ''){
+const Consensus = require('../sync/consensus');
+
+class Block {
+    constructor(index, timestamp, data, previousHash = '') {
         this.index = index;
         this.timestamp = timestamp;
-        this.transactions = transactions;
+        this.data = data;
         this.previousHash = previousHash;
-        this.hash = this.calculateHash();
+        this.hash = '';
         this.nonce = 0;
-  }
+    }
+
+    // Método para calcular el hash del bloque
+    calculateHash() {
+        return crypto
+            .createHash('sha256')
+            .update(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce)
+            .digest('hex');
+    }
+
+    // Método para minar el bloque utilizando el mecanismo de consenso (Proof of Work)
+    mineBlock(difficulty) {
+        const consensus = new Consensus(difficulty);
+        this.hash = consensus.proofOfWork(this);
+        console.log(`Block mined: ${this.hash}`);
+    }
 }
 
-/* funciones propias del blocque */
-
-module.exports = Block;
+module.exports = { Block };
