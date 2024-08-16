@@ -5,6 +5,15 @@ class Consensus {
         this.difficulty = difficulty;
     }
 
+    /* añadiendo consensusAlgorithm() */
+    consensusAlgorithm(Node, blockchain) {
+        const newChain = Node.network;
+        const localChain = blockchain.chain;
+
+        blockchain.chain = this.chooseChain(localChain, newChain);
+        return blockchain.chain;
+    }
+
     //  generar un hash a partir de los datos del bloque
     generateHash(block) {
         return crypto

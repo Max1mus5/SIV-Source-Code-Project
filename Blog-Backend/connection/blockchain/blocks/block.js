@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const Consensus = require('../sync/consensus');
+
 
 class Block {
     constructor(index, timestamp, data, previousHash = '') {
@@ -21,6 +21,7 @@ class Block {
 
     // minar el bloque utilizando el mecanismo de consenso (Proof of Work)
     mineBlock(difficulty) {
+        const Consensus = require('../sync/consensus');
         const consensus = new Consensus(difficulty);
         this.hash = consensus.proofOfWork(this);
         console.log(`Block mined: ${this.hash}`);

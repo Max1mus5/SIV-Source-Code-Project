@@ -5,12 +5,13 @@ class Blockchain {
   constructor() {
       this.chain = [this.createGenesisBlock()];
       this.difficulty = 2;  // Dificultad del mecanismo de consenso
+      this.pendingTransactions = [];
   }
 
   // Crear el bloque génesis
   createGenesisBlock() {
-      let date = new Date().now();
-      let dateStr = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+      let date = new Date();
+      let dateStr = date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear();
       return new Block(0, dateStr, 'Genesis Block', '0');
   }
 
@@ -31,6 +32,21 @@ class Blockchain {
       const consensus = new Consensus(this.difficulty);
       return consensus.isChainValid(this.chain);
   }
+
+  // Minar las transacciones pendientes y crear un nuevo bloque
+
+  minePendingTransactions(minerAddress) {
+      const newBlock = new Block(
+          this.getLatestBlock().index + 1,
+          new Date().toISOString(),
+          this.pendingTransactions,
+          this.getLatestBlock().hash
+      );
+      newBlock.mineBlock(this.difficulty);
+      this.chain.push(newBlock);
+      this.pendingTransactions = [];
+      return newBlock;
+  }
 }
 
-module.exports = { Blockchain };
+module.exports = Blockchain;
