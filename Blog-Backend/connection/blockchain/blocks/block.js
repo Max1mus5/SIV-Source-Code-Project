@@ -11,7 +11,7 @@ class Block {
         this.nonce = 0;
     }
 
-    // Método para calcular el hash del bloque
+    // calcular el hash del bloque
     calculateHash() {
         return crypto
             .createHash('sha256')
@@ -19,7 +19,7 @@ class Block {
             .digest('hex');
     }
 
-    // Método para minar el bloque utilizando el mecanismo de consenso (Proof of Work)
+    // minar el bloque utilizando el mecanismo de consenso (Proof of Work)
     mineBlock(difficulty) {
         const consensus = new Consensus(difficulty);
         this.hash = consensus.proofOfWork(this);

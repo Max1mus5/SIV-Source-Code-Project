@@ -5,7 +5,7 @@ class Consensus {
         this.difficulty = difficulty;
     }
 
-    // Función para generar un hash a partir de los datos del bloque
+    //  generar un hash a partir de los datos del bloque
     generateHash(block) {
         return crypto
             .createHash('sha256')
@@ -13,7 +13,7 @@ class Consensus {
             .digest('hex');
     }
 
-    // Función para realizar el trabajo de prueba
+    //  realizar el trabajo de prueba
     proofOfWork(block) {
         block.nonce = 0;
         let hash = this.generateHash(block);
@@ -26,7 +26,7 @@ class Consensus {
         return hash;
     }
 
-    // Función para validar el bloque
+    //  validar el bloque
     validateBlock(block, previousBlock) {
         if (block.previousHash !== previousBlock.hash) {
             return false;
@@ -43,7 +43,7 @@ class Consensus {
         return true;
     }
 
-    // Función para elegir la cadena válida
+    //  elegir la cadena válida
     chooseChain(localChain, newChain) {
         if (newChain.length > localChain.length && this.isChainValid(newChain)) {
             return newChain;
@@ -52,7 +52,7 @@ class Consensus {
         }
     }
 
-    // Función para validar la cadena entera
+    //  validar la cadena entera
     isChainValid(chain) {
         for (let i = 1; i < chain.length; i++) {
             const currentBlock = chain[i];
