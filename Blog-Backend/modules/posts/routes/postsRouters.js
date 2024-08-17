@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PostController = require('../controller/postController');
+const { handleErrorResponse } = require('../utils/utils');
 
 router.post('/create-new-publication', async (req, res) => {
     const postController = new PostController();
@@ -8,22 +9,22 @@ router.post('/create-new-publication', async (req, res) => {
         const newPost = await postController.createPost(req.body);
         res.status(200).json(newPost);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        handleErrorResponse(res, error);
     }
 });
 
 router.get('/post/:hash', async (req, res) => {
-    /* solicitud get de la forma: GET /post/abc123?autor=1
+     /* solicitud get de la forma: GET /post/abc123?autor=1
  */
     const postController = new PostController();
     const { hash } = req.params;
-    const { autor } = req.query;//id del autor
+    const { autor } = req.query;
 
     try {
-        const post = await postController.getUniquePublication(hash, autor);
-        res.status(200).json(post);
+        const result = await postController.getUniquePublication(hash, autor);
+        res.status(200).json(result);
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        handleErrorResponse(res, error, 404);
     }
 });
 
