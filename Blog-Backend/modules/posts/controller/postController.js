@@ -1,3 +1,4 @@
+const {sequelize} = require('../../../connection/db/database');
 const PostInstance = require('../model/postInstance'); 
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema'); 
 const BlockchainService = require('../../../connection/blockchain/blockchainServices')
@@ -5,7 +6,7 @@ const BlockchainService = require('../../../connection/blockchain/blockchainServ
 class PostController {
     async createPost(postData) {
         const blockchainService = new BlockchainService();
-
+        const transaction = await sequelize.transaction();
         try {
             //validar si es instancia de un post
             const newPostInstance = PostInstance.createPost(
@@ -34,13 +35,14 @@ class PostController {
 
 
              // Crear la transacción en la blockchain (equivale a crear el post)
-            const transaction = blockchainService.createTransaction(newPostInstance.autor, newPostInstance.content);
+             const transactionBlockchain = blockchainService.createTransaction(newPostInstance.autor, newPostInstance.content);
 
-             // Minar un nuevo bloque con la transacción del post
+             //  nuevo bloque con la transacción del post
              const newBlock = blockchainService.mineBlock(process.env.WALLET_ADDRESS);
-             newPostInstance.hashBlockchain = newBlock.hash;
-             // Crear el post en la base de datos con el hash del bloque en la blockchain
-             const newPost = new Posts({
+             newPostInstance.hashBlockchain = newBlock.hash; // Actualizar el hash de la blockchain
+
+             // Crear el post en la base de datos con la transacción activa
+            const newPost = await Posts.create({
                 autor_id: newPostInstance.autor,
                 date: newPostInstance.date,
                 title: newPostInstance.title,
@@ -49,13 +51,14 @@ class PostController {
                 likes: newPostInstance.likes,
                 comments: newPostInstance.comments,
                 hashBlockchain: newPostInstance.hashBlockchain
-            });
+            }, { transaction });
 
-            await newPost.save();
+            await transaction.commit();
 
             console.log(`Nuevo post creado con ID: ${newPost.id}`); 
             return newPost; 
         } catch (error) {
+            await transaction.rollback();
             console.error(`Error al crear el post: ${error.message}`); 
             throw error; 
         }
