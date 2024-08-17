@@ -42,7 +42,7 @@ class PostController {
              newPostInstance.hashBlockchain = newBlock.hash; // Actualizar el hash de la blockchain
 
              // Crear el post en la base de datos con la transacción activa
-            const newPost = await Posts.create({
+             const newPost = await Posts.create({
                 autor_id: newPostInstance.autor,
                 date: newPostInstance.date,
                 title: newPostInstance.title,
@@ -61,6 +61,28 @@ class PostController {
             await transaction.rollback();
             console.error(`Error al crear el post: ${error.message}`); 
             throw error; 
+        }
+    }
+
+    async getUniquePublication(hash, autorId) {
+        try {
+            // Busca el post en la base de datos utilizando el hash y el autor_id
+            const post = await Posts.findOne({
+                where: {
+                    hashBlockchain: hash,
+                    autor_id: autorId
+                }
+            });
+
+            if (!post) {
+                throw new Error('No se encontró ninguna publicación con el hash y el autor proporcionados.');
+            }
+
+            // Devuelve el post encontrado
+            return post;
+        } catch (error) {
+            console.error(`Error al obtener la publicación: ${error.message}`);
+            throw error;
         }
     }
 }
