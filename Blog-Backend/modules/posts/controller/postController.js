@@ -1,4 +1,4 @@
-const PostModel = require('../model/postModel'); 
+const PostInstance = require('../model/postInstance'); 
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema'); 
 const BlockchainService = require('../../../connection/blockchain/blockchainServices')
 
@@ -7,6 +7,18 @@ class PostController {
         const blockchainService = new BlockchainService();
 
         try {
+            //validar si es instancia de un post
+            const newPostInstance = PostInstance.createPost(
+                postData.autor,
+                postData.title,
+                postData.content,
+                postData.image,
+                postData.date,
+                postData.hashBlockchain,
+                postData.likes,
+                postData.comments
+            );
+
             if (!postData.autor || !postData.title || !postData.content || !postData.image) {
                 throw new Error('Todos los campos requeridos deben estar presentes.');
             }
@@ -22,23 +34,22 @@ class PostController {
 
 
              // Crear la transacción en la blockchain (equivale a crear el post)
-             const transaction = blockchainService.createTransaction(postData.autor, postData.content);
+            const transaction = blockchainService.createTransaction(newPostInstance.autor, newPostInstance.content);
 
              // Minar un nuevo bloque con la transacción del post
              const newBlock = blockchainService.mineBlock(process.env.WALLET_ADDRESS);
-             const blockHash = newBlock.hash; // Obtener el hash del bloque
- 
+             newPostInstance.hashBlockchain = newBlock.hash;
              // Crear el post en la base de datos con el hash del bloque en la blockchain
              const newPost = new Posts({
-                 autor_id: postData.autor,
-                 date: new Date().toISOString(),
-                 title: postData.title,
-                 content: postData.content,
-                 post_image: postData.image,
-                 likes: 0,
-                 comments: postData.comments || "",
-                 hashBlockchain: blockHash // Guardar el hash del bloque
-             });
+                autor_id: newPostInstance.autor,
+                date: newPostInstance.date,
+                title: newPostInstance.title,
+                content: newPostInstance.content,
+                post_image: newPostInstance.image,
+                likes: newPostInstance.likes,
+                comments: newPostInstance.comments,
+                hashBlockchain: newPostInstance.hashBlockchain
+            });
 
             await newPost.save();
 
