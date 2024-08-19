@@ -13,11 +13,9 @@ router.post('/create-new-publication', async (req, res) => {
     }
 });
 
-router.get('/post/:hash/:autor', async (req, res) => {
+router.get('/:hash/:autor', async (req, res) => {
     const postController = new PostController();
-    const hash  = req.params;
-    const autor  = req.params;
-
+    const { hash, autor } = req.params;
     try {
         const result = await postController.getUniquePublication(hash, autor);
         res.status(200).json(result);
