@@ -15,12 +15,6 @@ app.use('/post', postRoutes);
 
 const port = process.env.PORT || 3000;
 
-
-
-
-
-
-
 app.get('/status', (req, res) => {
     let status = {
         status: 'OK',

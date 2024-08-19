@@ -78,7 +78,7 @@ class PostController {
             if (!post) {
                 throw new Error('No se encontró ninguna publicación con el hash y el autor proporcionados.');
             }
-
+            console.log(`Publicación encontrada con ID: ${post.id}`, post, blockchainData);
             // Devolver el post y la información de la blockchain
             return {
                 post,

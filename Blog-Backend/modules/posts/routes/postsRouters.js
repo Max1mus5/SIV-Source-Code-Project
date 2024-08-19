@@ -13,12 +13,10 @@ router.post('/create-new-publication', async (req, res) => {
     }
 });
 
-router.get('/post/:hash', async (req, res) => {
-     /* solicitud get de la forma: GET /post/abc123?autor=1
- */
+router.get('/post/:hash/:autor', async (req, res) => {
     const postController = new PostController();
-    const { hash } = req.params;
-    const { autor } = req.query;
+    const hash  = req.params;
+    const autor  = req.params;
 
     try {
         const result = await postController.getUniquePublication(hash, autor);
