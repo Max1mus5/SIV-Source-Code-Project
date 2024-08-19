@@ -58,16 +58,11 @@ class PostController {
     async getUniquePublication(hash, autorId) {
         const blockchainService = new BlockchainService();
         try {
-            // Consultar la blockchain utilizando el hash
-            const blockchainData = await blockchainService.getTransactionDataByHash(hash);
+            const blockchainData = blockchainService.getTransactionDataByHash(hash);
             if (!blockchainData) {
                 throw new Error('El hash proporcionado no existe en la blockchain.');
             }
-            // Extraer información relevante desde la blockchain
-            const { autorBlockchain } = blockchainData;
-            // Validar autorId si es proporcionado, o usar el autor de la blockchain
-            const validAutorId = autorId ? convertToInt(autorId, 'autor') : autorBlockchain;
-
+            const validAutorId = autorId ? parseInt(autorId) : blockchainData.from;
             const post = await Posts.findOne({
                 where: {
                     hashBlockchain: hash,
@@ -78,14 +73,15 @@ class PostController {
             if (!post) {
                 throw new Error('No se encontró ninguna publicación con el hash y el autor proporcionados.');
             }
-            console.log(`Publicación encontrada con ID: ${post.id}`, post, blockchainData);
-            // Devolver el post y la información de la blockchain
+
+            // Devuelve el post y la información de la blockchain
             return {
                 post,
                 blockchainData
             };
         } catch (error) {
-            throw error; 
+            console.error(`Error al obtener la publicación: ${error.message}`);
+            throw error;
         }
     }
 }

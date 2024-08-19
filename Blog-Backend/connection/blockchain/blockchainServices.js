@@ -49,6 +49,28 @@ class BlockchainService {
     synchronizeBlockchain() {
         return this.consensus.consensusAlgorithm(this.node, this.blockchain);
     }
+
+    // busca una transacción por su hash
+    getTransactionDataByHash(hash) {
+        console.log(hash, this.blockchain.chain);
+        // Recorre los bloques en la blockchain para encontrar el hash
+        for (let block of this.blockchain.chain) {
+            if (block.hash === hash) {
+                console.log(block.hash);
+                // Devuelve la información relevante del bloque y las transacciones
+                return {
+                    hash: block.hash,
+                    timestamp: block.timestamp,
+                    transactions: block.transactions,
+                    previousHash: block.previousHash,
+                    nonce: block.nonce
+                };
+            }
+
+        }
+
+        throw new Error(`No se encontró una transacción o bloque con el hash: ${hash}`);
+    }
 }
 
 module.exports = BlockchainService;
