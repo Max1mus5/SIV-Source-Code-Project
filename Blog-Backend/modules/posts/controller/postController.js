@@ -84,6 +84,21 @@ class PostController {
             throw error;
         }
     }
+
+    async getAllPosts() {
+        try {
+            const posts = await Posts.findAll();
+            /* ordenar por recientes */
+            posts.sort((a, b) => {
+                return new Date(b.updatedAt) - new Date(a.updatedAt);
+            }
+            );
+            return posts;
+        } catch (error) {
+            console.error(`Error al obtener los posts: ${error.message}`);
+            throw error;
+        }
+    }
 }
 
 module.exports = PostController;

@@ -24,4 +24,14 @@ router.get('/:hash/:autor', async (req, res) => {
     }
 });
 
+router.get('/my-feed', async (req, res) => {
+    const postController = new PostController();
+    try {
+        const result = await postController.getAllPosts();
+        res.status(200).json(result);
+    } catch (error) {
+        handleErrorResponse(res, error);
+    }
+});
+
 module.exports = router;
