@@ -34,4 +34,30 @@ router.get('/my-feed', async (req, res) => {
     }
 });
 
-module.exports = router;
+router.get('/docs', (req, res) => {
+    res.json({
+        "/create-new-publication": {
+            description: 'Create a new publication',
+            method: 'POST',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The newly created post'
+        },
+        "/:hash/:autor": {
+            description: 'Get a unique publication by hash and author',
+            method: 'GET',
+            params: {
+                hash: 'String',
+                autor: 'String'
+            },
+            returns: 'The unique publication'
+        },
+        "/my-feed": {
+            description: 'Get all posts',
+            method: 'GET',
+            params: {},
+            returns: 'All posts'
+        }
+    });
+});
