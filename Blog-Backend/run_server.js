@@ -4,10 +4,16 @@ const userRoutes = require('./modules/user/routes/userRoutes');
 const resetPasswordRoutes = require('./modules/user/routes/recoverPassword');
 const postRoutes = require('./modules/posts/routes/postsRouters');
 const { sequelize } = require('./connection/db/database');
+const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 
 app.use(express.json());
+app.use(cors({
+    origin: '*', 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
+    credentials: false, 
+}));
 app.use('/user', userRoutes);
 app.use('/reset', resetPasswordRoutes);
 app.use('/post', postRoutes);
@@ -39,6 +45,12 @@ app.listen(port, async () => {
 const blockchainApp = express(); //otra instancia de express para el servicio de blockchain
 
 blockchainApp.use(express.json());
+blockchainApp.use(cors({
+    origin: '*', 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
+    credentials: false, //
+})
+)
 blockchainApp.use('/blockchain', require('./connection/blockchain/blockchainRouter'));
 
 const blockchainPort = process.env.BC_PORT || 3001;
