@@ -48,7 +48,7 @@ blockchainApp.use(express.json());
 blockchainApp.use(cors({
     origin: '*', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
-    credentials: false, //
+    credentials: false, // allow session cookie from browser to pass through
 })
 )
 blockchainApp.use('/blockchain', require('./connection/blockchain/blockchainRouter'));
