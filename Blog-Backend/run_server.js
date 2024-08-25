@@ -34,7 +34,12 @@ app.listen(port, async () => {
     
 });
 
+//#region Blockchain Server
+
 const blockchainApp = express(); //otra instancia de express para el servicio de blockchain
+
+blockchainApp.use(express.json());
+blockchainApp.user('/blockchain', require('./connection/blockchain/blockchainRouter'));
 
 const blockchainPort = process.env.BC_PORT || 3001;
 
@@ -49,3 +54,4 @@ blockchainApp.get('/status', (req, res) => {
 blockchainApp.listen(blockchainPort, () => {
     console.log(`Blockchain Service running at http://localhost:${blockchainPort}`);
 });
+//#endregion
