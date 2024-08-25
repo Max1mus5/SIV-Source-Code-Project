@@ -36,6 +36,8 @@ class PostController {
                 content: newPostInstance.content
             });
 
+            console.log(transactionBlockchain.data.transaction);
+
             // Minar el bloque con la transacción del post
             const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine-block`, {
                 minerAddress: process.env.WALLET_ADDRESS
