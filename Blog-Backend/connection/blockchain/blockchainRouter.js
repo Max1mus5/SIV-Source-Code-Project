@@ -16,6 +16,7 @@ router.post('/create-transaction', (req, res) => {
             message: 'Transacción creada exitosamente',
             transaction
         });
+        return transaction;
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
