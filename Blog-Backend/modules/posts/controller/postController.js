@@ -11,6 +11,7 @@ const blockchainPort = process.env.BC_PORT || 3001;
 class PostController {
     async createPost(postData) {
         const transaction = await sequelize.transaction();
+        let blockIndex;
         try {
             // Validar campos requeridos
             validateRequiredFields(postData, ['autor', 'title', 'content', 'image']);
@@ -35,7 +36,7 @@ class PostController {
                 author: newPostInstance.autor,
                 content: newPostInstance.content
             });
-
+            blockIndex = newBlock.data.index;
             console.log(transactionBlockchain.data.transaction);
 
             // Minar el bloque con la transacción del post
@@ -62,9 +63,13 @@ class PostController {
             console.log(`Nuevo post creado con ID: ${newPost.id}`);
             return newPost;
         } catch (error) {
+            if (blockIndex !== undefined) {
+                // Eliminar el bloque en caso de error
+                await axios.delete(`http://localhost:${blockchainPort}/blockchain/block/${blockIndex}`);
+            }
             await transaction.rollback();
             console.error(`Error al crear el post: ${error.message}`);
-            throw error; // El manejo del error se realizará en las rutas o el código que llame este método
+            throw error;
         }
     }
 

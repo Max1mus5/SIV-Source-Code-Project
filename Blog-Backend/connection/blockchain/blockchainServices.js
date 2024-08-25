@@ -99,6 +99,15 @@ class BlockchainService {
             throw new Error('No se pudo reorganizar la blockchain correctamente.');
         }
     }
+
+    //eliminar un bloque por su índice
+    removeBlockByIndex(index) {
+        if (index >= 0 && index < this.blockchain.length) {
+            this.blockchain.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
 }
 
 module.exports = BlockchainService;

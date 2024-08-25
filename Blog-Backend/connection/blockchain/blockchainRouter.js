@@ -88,4 +88,18 @@ router.post('/add-node', (req, res) => {
     }
 });
 
+router.delete('/blockchain/block/:index', (req, res) => {
+    const { index } = req.params;
+    try {
+        const isDeleted = blockchainService.removeBlockByIndex(parseInt(index));
+        if (isDeleted) {
+            res.status(200).json({ message: 'Bloque eliminado exitosamente' });
+        } else {
+            res.status(404).json({ message: 'Bloque no encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
