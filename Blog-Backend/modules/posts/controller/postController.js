@@ -1,12 +1,13 @@
-const {sequelize} = require('../../../connection/db/database');
-const PostInstance = require('../model/postInstance'); 
-const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema'); 
-const BlockchainService = require('../../../connection/blockchain/blockchainServices')
+const axios = require('axios');
+const { sequelize } = require('../../../connection/db/database');
+const PostInstance = require('../model/postInstance');
+const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
 const { validateRequiredFields, convertToInt } = require('../utils/utils');
-
+const dotenv = require('dotenv');
+dotenv.config();
+const blockchainPort = process.env.BC_PORT || 3001;
 class PostController {
     async createPost(postData) {
-        const blockchainService = new BlockchainService();
         const transaction = await sequelize.transaction();
         try {
             // Validar campos requeridos
@@ -28,11 +29,18 @@ class PostController {
             );
 
             // Crear la transacción en la blockchain
-            const transactionBlockchain = await blockchainService.createTransaction(newPostInstance.autor, newPostInstance.content);
+            const transactionBlockchain = await axios.post(`http://localhost:${blockchainPort}/blockchain/transaction`, {
+                author: newPostInstance.autor,
+                content: newPostInstance.content
+            });
 
             // Minar el bloque con la transacción del post
-            const newBlock = await blockchainService.mineBlock(process.env.WALLET_ADDRESS);
-            newPostInstance.hashBlockchain = newBlock.hash;
+            const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine`, {
+                minerAddress: process.env.WALLET_ADDRESS
+            });
+
+            // Asignar el hash del bloque minado al post
+            newPostInstance.hashBlockchain = newBlock.data.hash;
 
             // Crear el post en la base de datos con la transacción activa
             const newPost = await Posts.create({
@@ -51,18 +59,21 @@ class PostController {
             return newPost;
         } catch (error) {
             await transaction.rollback();
+            console.error(`Error al crear el post: ${error.message}`);
             throw error; // El manejo del error se realizará en las rutas o el código que llame este método
         }
     }
 
     async getUniquePublication(hash, autorId) {
-        const blockchainService = new BlockchainService();
         try {
-            const blockchainData = blockchainService.getTransactionDataByHash(hash);
+            // Obtener los datos de la blockchain basados en el hash
+            const blockchainData = await axios.get(`http://localhost:${blockchainPort}/blockchain/transaction/${hash}`);
+
             if (!blockchainData) {
                 throw new Error('El hash proporcionado no existe en la blockchain.');
             }
-            const validAutorId = autorId ? parseInt(autorId) : blockchainData.from;
+
+            const validAutorId = autorId ? parseInt(autorId) : blockchainData.data.from;
             const post = await Posts.findOne({
                 where: {
                     hashBlockchain: hash,
@@ -77,7 +88,7 @@ class PostController {
             // Devuelve el post y la información de la blockchain
             return {
                 post,
-                blockchainData
+                blockchainData: blockchainData.data
             };
         } catch (error) {
             console.error(`Error al obtener la publicación: ${error.message}`);
@@ -88,11 +99,8 @@ class PostController {
     async getAllPosts() {
         try {
             const posts = await Posts.findAll();
-            /* ordenar por recientes */
-            posts.sort((a, b) => {
-                return new Date(b.updatedAt) - new Date(a.updatedAt);
-            }
-            );
+            // Ordenar por más recientes
+            posts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
             return posts;
         } catch (error) {
             console.error(`Error al obtener los posts: ${error.message}`);
