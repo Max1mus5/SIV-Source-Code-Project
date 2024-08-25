@@ -75,34 +75,6 @@ class Post {
     }
 
 
-
-    async saveToBlockchain() {
-        try {
-            // Lógica para guardar en la blockchain utilizando Web3.js e Infura
-            const hash = await someBlockchainFunction(this.content);
-            this.hashBlockchain = hash;
-            return hash;
-        } catch (error) {
-            throw new Error(`Error saving post to blockchain: ${error.message}`);
-        }
-    }
-
-    async saveImageToIPFS() {
-        try {
-            // Lógica para guardar la imagen en IPFS
-            const ipfsUrl = await someIPFSFunction(this.image);
-            this.image = ipfsUrl;
-            return ipfsUrl;
-        } catch (error) {
-            throw new Error(`Error saving image to IPFS: ${error.message}`);
-        }
-    }
-
-    sharePost() {
-        // Lógica para generar una URL de compartir para el post
-        const shareUrl = `${baseUrl}/post/${this.hashBlockchain}`;
-        return shareUrl;
-    }
 }
 
 
