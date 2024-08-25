@@ -58,6 +58,20 @@ router.get('/validate-blockchain', (req, res) => {
     }
 });
 
+router.get('/blockchain/transaction/:hash', (req, res) => {
+    const { hash } = req.params;
+    try {
+        const transaction = blockchainService.getTransactionByHash(hash);
+        if (transaction) {
+            res.status(200).json(transaction);
+        } else {
+            res.status(404).json({ message: 'Transacción no encontrada' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // Sincronizar la blockchain con un nuevo nodo
 router.post('/add-node', (req, res) => {
     try {

@@ -5,6 +5,8 @@ const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchem
 const { validateRequiredFields, convertToInt } = require('../utils/utils');
 const dotenv = require('dotenv');
 dotenv.config();
+
+
 const blockchainPort = process.env.BC_PORT || 3001;
 class PostController {
     async createPost(postData) {
@@ -29,13 +31,13 @@ class PostController {
             );
 
             // Crear la transacción en la blockchain
-            const transactionBlockchain = await axios.post(`http://localhost:${blockchainPort}/blockchain/transaction`, {
+            const transactionBlockchain = await axios.post(`http://localhost:${blockchainPort}/blockchain/create-transaction`, {
                 author: newPostInstance.autor,
                 content: newPostInstance.content
             });
 
             // Minar el bloque con la transacción del post
-            const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine`, {
+            const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine-block`, {
                 minerAddress: process.env.WALLET_ADDRESS
             });
 
