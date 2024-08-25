@@ -39,7 +39,7 @@ app.listen(port, async () => {
 const blockchainApp = express(); //otra instancia de express para el servicio de blockchain
 
 blockchainApp.use(express.json());
-blockchainApp.user('/blockchain', require('./connection/blockchain/blockchainRouter'));
+blockchainApp.use('/blockchain', require('./connection/blockchain/blockchainRouter'));
 
 const blockchainPort = process.env.BC_PORT || 3001;
 
