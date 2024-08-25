@@ -50,7 +50,7 @@ class BlockchainService {
         return this.consensus.consensusAlgorithm(this.node, this.blockchain);
     }
 
-    // busca una transacción por su hash
+    // Buscar una transacción por su hash
     getTransactionDataByHash(hash) {
         console.log(hash, this.blockchain.chain);
         // Recorre los bloques en la blockchain para encontrar el hash
@@ -66,10 +66,38 @@ class BlockchainService {
                     nonce: block.nonce
                 };
             }
-
         }
 
         throw new Error(`No se encontró una transacción o bloque con el hash: ${hash}`);
+    }
+
+    // Reorganizar la blockchain en base a los hashes
+    reorganizeBlockchain() {
+        let previousBlock = null;
+        for (let i = 0; i < this.blockchain.chain.length; i++) {
+            const currentBlock = this.blockchain.chain[i];
+
+            if (previousBlock) {
+                // Si el hash previo del bloque actual no coincide con el hash del bloque anterior
+                if (currentBlock.previousHash !== previousBlock.hash) {
+                    console.error(`Inconsistencia encontrada: el bloque ${i} tiene un hash anterior incorrecto.`);
+                    // Corregir la inconsistencia
+                    currentBlock.previousHash = previousBlock.hash;
+                    currentBlock.hash = currentBlock.calculateHash();
+                    console.log(`Bloque ${i} corregido: nuevo hash es ${currentBlock.hash}`);
+                }
+            }
+
+            // Continuar con el siguiente bloque
+            previousBlock = currentBlock;
+        }
+
+        // Después de la reorganización, verificar si la cadena es válida
+        if (this.isValidChain()) {
+            console.log('La blockchain ha sido reorganizada y es válida.');
+        } else {
+            throw new Error('No se pudo reorganizar la blockchain correctamente.');
+        }
     }
 }
 
