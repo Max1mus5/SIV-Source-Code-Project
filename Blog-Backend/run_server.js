@@ -33,3 +33,19 @@ app.listen(port, async () => {
     }
     
 });
+
+const blockchainApp = express(); //otra instancia de express para el servicio de blockchain
+
+const blockchainPort = process.env.BC_PORT || 3001;
+
+blockchainApp.get('/status', (req, res) => {
+    let status = {
+        status: 'OK',
+        message: 'Blockchain Service is running'
+    };
+    res.json(status);
+});
+
+blockchainApp.listen(blockchainPort, () => {
+    console.log(`Blockchain Service running at http://localhost:${blockchainPort}`);
+});
