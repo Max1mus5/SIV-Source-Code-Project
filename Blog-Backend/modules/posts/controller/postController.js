@@ -196,10 +196,7 @@ class PostController {
             throw error;
     }
     
-    
-
-
-
+}
 }
 
 module.exports = PostController;
