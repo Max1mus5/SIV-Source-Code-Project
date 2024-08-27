@@ -123,10 +123,8 @@ class PostController {
         let blockIndex; 
     
         try {
-            validateRequiredFields(postData, ['id', 'autor', 'title', 'content', 'image']);
-    
             // Convertir autor a número entero si es necesario
-            const autorId = convertToInt(postData.autor, 'autor');
+            const autorId = convertToInt(postData.autor_id, 'autor');
     
             // Crear instancia de Post actualizada
             const updatedPostInstance = PostInstance.createPost(

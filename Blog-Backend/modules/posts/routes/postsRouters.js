@@ -34,6 +34,27 @@ router.get('/my-feed', async (req, res) => {
     }
 });
 
+router.put('/update-publication', async (req, res) => {
+    const postController = new PostController();
+    try {
+        const updatedPost = await postController.updatePost(req.body);
+        res.status(200).json(updatedPost);
+    } catch (error) {
+        handleErrorResponse(res, error);
+    }
+});
+
+router.delete('/delete-publication', async (req, res) => {
+    const postController = new PostController();
+    try {
+        const deletedPost = await postController.deletePost(req.body);
+        res.status(200).json(deletedPost);
+    } catch (error) {
+        handleErrorResponse(res, error);
+    }
+});
+
+
 router.get('/docs', (req, res) => {
     res.json({
         "/create-new-publication": {
@@ -60,28 +81,6 @@ router.get('/docs', (req, res) => {
             returns: 'All posts'
         }
     });
-
-
-router.put('/update-publication', async (req, res) => {
-    const postController = new PostController();
-    try {
-        const updatedPost = await postController.updatePost(req.body);
-        res.status(200).json(updatedPost);
-    } catch (error) {
-        handleErrorResponse(res, error);
-    }
-
-});
-
-router.delete('/delete-publication', async (req, res) => {
-    const postController = new PostController();
-    try {
-        const deletedPost = await postController.deletePost(req.body);
-        res.status(200).json(deletedPost);
-    } catch (error) {
-        handleErrorResponse(res, error);
-    }
-});
 
 
 });
