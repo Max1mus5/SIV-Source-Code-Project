@@ -51,8 +51,8 @@ class BlockchainService {
     }
 
     // Buscar una transacción por su hash
-    getTransactionDataByHash(hash) {
-        console.log(hash, this.blockchain.chain);
+    getTransactionByHash(hash) {
+        console.log("HOLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",hash, blockchain.chain);
         // Recorre los bloques en la blockchain para encontrar el hash
         for (let block of this.blockchain.chain) {
             if (block.hash === hash) {

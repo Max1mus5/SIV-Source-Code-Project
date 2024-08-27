@@ -8,6 +8,7 @@ dotenv.config();
 
 
 const blockchainPort = process.env.BC_PORT || 3001;
+const baseURL = process.env.baseURL;
 class PostController {
     async createPost(postData) {
         const transaction = await sequelize.transaction();
@@ -32,17 +33,18 @@ class PostController {
             );
 
             // Crear la transacción en la blockchain
-            const transactionBlockchain = await axios.post(`http://localhost:${blockchainPort}/blockchain/create-transaction`, {
+            const transactionBlockchain = await axios.post(`${baseURL}:${blockchainPort}/blockchain/create-transaction`, {
                 author: newPostInstance.autor,
                 content: newPostInstance.content
             });
-            blockIndex = newBlock.data.index;
+            
             console.log(transactionBlockchain.data.transaction);
 
             // Minar el bloque con la transacción del post
-            const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine-block`, {
+            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
                 minerAddress: process.env.WALLET_ADDRESS
             });
+            blockIndex = newBlock.data.index;
 
             // Asignar el hash del bloque minado al post
             newPostInstance.hashBlockchain = newBlock.data.hash;
@@ -65,7 +67,7 @@ class PostController {
         } catch (error) {
             if (blockIndex !== undefined) {
                 // Eliminar el bloque en caso de error
-                await axios.delete(`http://localhost:${blockchainPort}/blockchain/block/${blockIndex}`);
+                await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${blockIndex}`);
             }
             await transaction.rollback();
             console.error(`Error al crear el post: ${error.message}`);
@@ -76,7 +78,7 @@ class PostController {
     async getUniquePublication(hash, autorId) {
         try {
             // Obtener los datos de la blockchain basados en el hash
-            const blockchainData = await axios.get(`http://localhost:${blockchainPort}/blockchain/transaction/${hash}`);
+            const blockchainData = await axios.get(`${baseURL}:${blockchainPort}/blockchain/transaction/${hash}`);
 
             if (!blockchainData) {
                 throw new Error('El hash proporcionado no existe en la blockchain.');
@@ -116,6 +118,87 @@ class PostController {
             throw error;
         }
     }
+
+    async updatePost(postData) {
+        const transaction = await sequelize.transaction();
+        let blockIndex; // Para almacenar el índice del bloque actualizado en la blockchain
+        try {
+            // Validar campos requeridos
+            validateRequiredFields(postData, ['id', 'autor', 'title', 'content', 'image']);
+    
+            // Convertir autor a número entero si es necesario
+            const autorId = convertToInt(postData.autor, 'autor');
+    
+            // Crear instancia de Post actualizada
+            const updatedPostInstance = PostInstance.createPost(
+                autorId,
+                postData.title,
+                postData.content,
+                postData.image,
+                postData.date,
+                postData.hashBlockchain,
+                postData.likes,
+                postData.comments
+            );
+    
+            // Obtener el post original de la base de datos para comparar
+            const originalPost = await Posts.findByPk(postData.id, { transaction });
+            if (!originalPost) {
+                throw new Error('Post no encontrado');
+            }
+    
+            // Actualizar la transacción en la blockchain
+            const transactionBlockchain = await axios.put(`http://localhost:${blockchainPort}/blockchain/update-transaction`, {
+                originalHash: originalPost.hashBlockchain,
+                author: updatedPostInstance.autor,
+                content: updatedPostInstance.content
+            });
+    
+            console.log(transactionBlockchain.data.transaction);
+    
+            // Minar un nuevo bloque con la transacción actualizada
+            const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine-block`, {
+                minerAddress: process.env.WALLET_ADDRESS
+            });
+    
+            // Asignar el índice del nuevo bloque minado
+            blockIndex = newBlock.data.index; // Suponiendo que el índice del bloque se devuelve en la respuesta
+    
+            // Asignar el hash del nuevo bloque al post actualizado
+            updatedPostInstance.hashBlockchain = newBlock.data.hash;
+    
+            // Actualizar el post en la base de datos con la transacción activa
+            const updatedPost = await Posts.update({
+                autor_id: updatedPostInstance.autor,
+                date: updatedPostInstance.date,
+                title: updatedPostInstance.title,
+                content: updatedPostInstance.content,
+                post_image: updatedPostInstance.image,
+                likes: updatedPostInstance.likes,
+                comments: updatedPostInstance.comments,
+                hashBlockchain: updatedPostInstance.hashBlockchain
+            }, {
+                where: { id: postData.id },
+                transaction
+            });
+    
+            await transaction.commit();
+            console.log(`Post actualizado con ID: ${postData.id}`);
+            return updatedPost;
+        } catch (error) {
+            if (blockIndex !== undefined) {
+                // Eliminar el bloque en caso de error
+                await axios.delete(`http://localhost:${blockchainPort}/blockchain/block/${blockIndex}`);
+            }
+            await transaction.rollback();
+            console.error(`Error al actualizar el post: ${error.message}`);
+            throw error; // El manejo del error se realizará en las rutas o el código que llame este método
+        }
+    }
+    
+
+
+
 }
 
 module.exports = PostController;
