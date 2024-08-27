@@ -32,7 +32,7 @@ app.get('/status', (req, res) => {
 app.listen(port, async () => {
     try{
         await sequelize.sync({ alter: true });
-        console.log(`http://localhost:${port}`);
+        console.log(`${process.env.baseURL}:${port}`);
     }
     catch(err){
         console.log(err);
@@ -64,6 +64,6 @@ blockchainApp.get('/status', (req, res) => {
 });
 
 blockchainApp.listen(blockchainPort, () => {
-    console.log(`Blockchain Service running at http://localhost:${blockchainPort}`);
+    console.log(`Blockchain Service running at ${process.env.baseURL}:${blockchainPort}`);
 });
 //#endregion

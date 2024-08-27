@@ -148,7 +148,7 @@ class PostController {
             }
     
             // Actualizar la transacción en la blockchain
-            const transactionBlockchain = await axios.put(`http://localhost:${blockchainPort}/blockchain/update-transaction`, {
+            const transactionBlockchain = await axios.put(`${baseURL}:${blockchainPort}/blockchain/update-transaction`, {
                 originalHash: originalPost.hashBlockchain,
                 author: updatedPostInstance.autor,
                 content: updatedPostInstance.content
@@ -157,7 +157,7 @@ class PostController {
             console.log(transactionBlockchain.data.transaction);
     
             // Minar un nuevo bloque con la transacción actualizada
-            const newBlock = await axios.post(`http://localhost:${blockchainPort}/blockchain/mine-block`, {
+            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
                 minerAddress: process.env.WALLET_ADDRESS
             });
     
@@ -188,7 +188,7 @@ class PostController {
         } catch (error) {
             if (blockIndex !== undefined) {
                 // Eliminar el bloque en caso de error
-                await axios.delete(`http://localhost:${blockchainPort}/blockchain/block/${blockIndex}`);
+                await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${blockIndex}`);
             }
             await transaction.rollback();
             console.error(`Error al actualizar el post: ${error.message}`);
