@@ -62,7 +62,7 @@ router.get('/docs', (req, res) => {
     });
 
 
-router.update('/update-publication', async (req, res) => {
+router.put('/update-publication', async (req, res) => {
     const postController = new PostController();
     try {
         const updatedPost = await postController.updatePost(req.body);

@@ -42,10 +42,9 @@ class PostController {
 
             // Minar el bloque con la transacción del post
             const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
-                minerAddress: process.env.WALLET_ADDRESS
+                minerAddress:  newPostInstance.autor
             });
             blockIndex = newBlock.data.index;
-
             // Asignar el hash del bloque minado al post
             newPostInstance.hashBlockchain = newBlock.data.hash;
 
