@@ -21,19 +21,8 @@ function convertToInt(value, fieldName) {
   return intValue;
 }
 
-// Función para validar los campos requeridos
-function validateRequiredFields(data, requiredFields) {
-  requiredFields.forEach(field => {
-      if (!data[field]) {
-          throw new Error(`El campo ${field} es obligatorio.`);
-      }
-  });
-}
-
-
 
 module.exports = {
-  validateRequiredFields,
   handleErrorResponse,
   validateRequiredFields,
   convertToInt,
