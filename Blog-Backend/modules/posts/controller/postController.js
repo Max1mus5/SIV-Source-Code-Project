@@ -121,9 +121,9 @@ class PostController {
 
     async updatePost(postData) {
         const transaction = await sequelize.transaction();
-        let blockIndex; // Para almacenar el índice del bloque actualizado en la blockchain
+        let blockIndex; 
+    
         try {
-            // Validar campos requeridos
             validateRequiredFields(postData, ['id', 'autor', 'title', 'content', 'image']);
     
             // Convertir autor a número entero si es necesario
@@ -147,6 +147,11 @@ class PostController {
                 throw new Error('Post no encontrado');
             }
     
+            // Verificar que el autor coincida
+            if (originalPost.autor_id !== updatedPostInstance.autor) {
+                throw new Error('El autor del post no coincide con el autor en la blockchain.');
+            }
+    
             // Actualizar la transacción en la blockchain
             const transactionBlockchain = await axios.put(`${baseURL}:${blockchainPort}/blockchain/update-transaction`, {
                 originalHash: originalPost.hashBlockchain,
@@ -156,18 +161,14 @@ class PostController {
     
             console.log(transactionBlockchain.data.transaction);
     
-            // Minar un nuevo bloque con la transacción actualizada
-            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
-                minerAddress: process.env.WALLET_ADDRESS
+            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/mine-block`, {
+                minerAddress: postData.minerAddress 
             });
     
-            // Asignar el índice del nuevo bloque minado
-            blockIndex = newBlock.data.index; // Suponiendo que el índice del bloque se devuelve en la respuesta
+            blockIndex = newBlock.data.block.index; 
     
-            // Asignar el hash del nuevo bloque al post actualizado
-            updatedPostInstance.hashBlockchain = newBlock.data.hash;
+            updatedPostInstance.hashBlockchain = newBlock.data.block.hash;
     
-            // Actualizar el post en la base de datos con la transacción activa
             const updatedPost = await Posts.update({
                 autor_id: updatedPostInstance.autor,
                 date: updatedPostInstance.date,
@@ -192,9 +193,9 @@ class PostController {
             }
             await transaction.rollback();
             console.error(`Error al actualizar el post: ${error.message}`);
-            throw error; // El manejo del error se realizará en las rutas o el código que llame este método
-        }
+            throw error;
     }
+    
     
 
 
