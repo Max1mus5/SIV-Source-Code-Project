@@ -57,14 +57,13 @@ Notification.belongsTo(User, { foreignKey: 'user_id' });
 User.hasOne(Config, { foreignKey: 'user_id' });
 Config.belongsTo(User, { foreignKey: 'user_id' });
 
-
 // Definir modelo Users_backup
 const Users_backups = sequelize.define('Users_backups', {
   name: DataTypes.STRING,
   email: DataTypes.STRING,
   password: DataTypes.STRING,
   bio: DataTypes.STRING,
-  role: DataTypes.ENUM('admin', 'author', 'reader'),
+  role: DataTypes.ENUM('admin', 'autor', 'reader'),
   profileImage: DataTypes.STRING,
   favorites: DataTypes.ARRAY(DataTypes.INTEGER),
   posts: DataTypes.ARRAY(DataTypes.INTEGER),
