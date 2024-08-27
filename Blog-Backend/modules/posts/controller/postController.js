@@ -35,7 +35,7 @@ class PostController {
 
             // Crear la transacción en la blockchain
             const transactionBlockchain = await axios.post(`${baseURL}:${blockchainPort}/blockchain/create-transaction`, {
-                author: newPostInstance.autor,
+                autor: newPostInstance.autor,
                 content: newPostInstance.content
             });
             
@@ -154,7 +154,7 @@ class PostController {
             // Actualizar la transacción en la blockchain
             const transactionBlockchain = await axios.put(`${baseURL}:${blockchainPort}/blockchain/update-transaction`, {
                 originalHash: originalPost.hashBlockchain,
-                author: updatedPostInstance.autor,
+                autor: updatedPostInstance.autor,
                 content: updatedPostInstance.content
             });
     

@@ -102,4 +102,18 @@ router.delete('/blockchain/block/:index', (req, res) => {
     }
 });
 
+
+//actualizar transacción
+router.put('/update-transaction', (req, res) => {
+    const { originalHash, author, content } = req.body;
+    try {
+        const updatedTransaction = blockchainService.updateTransaction(originalHash, author, content);
+        res.status(200).json({
+            message: 'Transacción actualizada exitosamente',
+            transaction: updatedTransaction
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 module.exports = router;

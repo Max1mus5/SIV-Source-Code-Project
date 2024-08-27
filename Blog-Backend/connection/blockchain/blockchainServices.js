@@ -71,6 +71,40 @@ class BlockchainService {
         throw new Error(`No se encontró una transacción o bloque con el hash: ${hash}`);
     }
 
+    /* router.put('/update-transaction', (req, res) => {
+    const { originalHash, author, content } = req.body;
+    try {
+        const updatedTransaction = blockchainService.updateTransaction(originalHash, author, content);
+        res.status(200).json({
+            message: 'Transacción actualizada exitosamente',
+            transaction: updatedTransaction
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    } */
+    updateTransaction(originalHash, autor, content) {
+        try{
+            for (let block of this.blockchain.chain) {
+                for (let transaction of block.transactions) {
+                    if (transaction.hash === originalHash) {
+                        transaction.autor = autor;
+                        transaction.content = content;
+                        transaction.timestamp = Date.now();
+                        transaction.hash = transaction.calculateHash();
+                        return transaction;
+    
+                    }
+                }
+            }
+        }
+        catch(error){
+            throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);
+        }
+    }
+
+
+
+
     // Reorganizar la blockchain en base a los hashes
     reorganizeBlockchain() {
         let previousBlock = null;
