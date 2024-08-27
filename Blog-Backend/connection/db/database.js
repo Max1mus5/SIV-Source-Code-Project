@@ -77,7 +77,7 @@ const Users_backups = sequelize.define('Users_backups', {
 });
 
 // Crear tabla Users_backup si no existe
-sequelize.sync({ force: true }).then(async () => {
+sequelize.sync({ alter: true  }).then(async () => {
   try {
     // Migrar datos de User a Users_backup
     const users = await User.findAll();
