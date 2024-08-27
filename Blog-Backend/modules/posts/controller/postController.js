@@ -4,6 +4,7 @@ const PostInstance = require('../model/postInstance');
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
 const { validateRequiredFields, convertToInt } = require('../utils/utils');
 const dotenv = require('dotenv');
+const { hash } = require('crypto');
 dotenv.config();
 
 
@@ -38,15 +39,14 @@ class PostController {
                 content: newPostInstance.content
             });
             
-            console.log(transactionBlockchain.data.transaction);
+            //console.log(transactionBlockchain.data.transaction);
 
             // Minar el bloque con la transacción del post
             const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
                 minerAddress:  newPostInstance.autor
             });
             blockIndex = newBlock.data.index;
-            // Asignar el hash del bloque minado al post
-            newPostInstance.hashBlockchain = newBlock.data.hash;
+            newPostInstance.hashBlockchain = newBlock.data.block.hash;
 
             // Crear el post en la base de datos con la transacción activa
             const newPost = await Posts.create({
@@ -57,7 +57,7 @@ class PostController {
                 post_image: newPostInstance.image,
                 likes: newPostInstance.likes,
                 comments: newPostInstance.comments,
-                hashBlockchain: newPostInstance.hashBlockchain
+                hashBlockchain: newPostInstance.hashBlockchain,
             }, { transaction });
 
             await transaction.commit();

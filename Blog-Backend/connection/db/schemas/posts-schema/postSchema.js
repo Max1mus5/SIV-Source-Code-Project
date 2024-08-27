@@ -29,7 +29,7 @@ const Posts = sequelize.define("Posts", {
   },
   hashBlockchain:{
     type: DataTypes.STRING,
-    allowNull: true, //RECORDAR MODIFICAR ESTE CAMPO CUANDO SE IMPLEMENTE LA BLOCKCHAIN
+    allowNull: false, 
   },
   comments:{
     type: DataTypes.STRING,
