@@ -62,5 +62,7 @@ El mecanismo de consenso es el proceso mediante el cual los nodos de la red lleg
 [*ver codigo*](../blockchain/sync/consense.js)
 
 
-## Funcionamiento General
+## Manejo de una misma instancia:
+para manejar una misma instancia de la blockchain, se opto por crear un archivo que contenga esta instancia alamecenada en si misma para de esta forma todo el programa pueda acceder a la misma instancia de la blockchain.
 
+[*ver codigo*](./blockchainInstance.js)

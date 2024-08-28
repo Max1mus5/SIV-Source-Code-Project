@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const BlockchainService = require('./blockchainServices');
+const blockchainService = require('./blockchainInstance');
 const dotenv = require('dotenv');
 dotenv.config();
-
-// Instancia del servicio de blockchain
-const blockchainService = new BlockchainService();
 
 // Crear una nueva transacción
 router.post('/create-transaction', (req, res) => {
@@ -116,4 +113,5 @@ router.put('/update-transaction', (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
 module.exports = router;

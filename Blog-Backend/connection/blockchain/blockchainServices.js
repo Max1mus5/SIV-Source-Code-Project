@@ -20,11 +20,10 @@ class BlockchainService {
     }
 
     // montar blockchain desde la base de datos
-    mountBlockchain(posts){
-        for (let post of posts){
-            const transaction = new Transaction(post.autor_id, post.content, post.date, 'post');
+    async mountBlockchain(posts) {
+        for (let post of posts) {
+            const transaction = this.createTransaction(post.autor_id, post.content, 'post');
             transaction.hash = post.hashBlockchain;
-            this.blockchain.pendingTransactions.push(transaction);
         }
         return this.blockchain;
     }
