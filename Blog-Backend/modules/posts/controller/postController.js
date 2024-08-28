@@ -121,7 +121,6 @@ class PostController {
     async updatePost(postData) {
         const transaction = await sequelize.transaction();
         let blockIndex; 
-    
         try {
             // Convertir autor a número entero si es necesario
             const autorId = convertToInt(postData.autor_id, 'autor');
@@ -150,11 +149,14 @@ class PostController {
             }
     
             // Actualizar la transacción en la blockchain
+            console.log("antes de put en updateurl")
             const transactionBlockchain = await axios.put(`${baseURL}:${blockchainPort}/blockchain/update-transaction`, {
                 originalHash: originalPost.hashBlockchain,
                 autor: updatedPostInstance.autor,
                 content: updatedPostInstance.content
             });
+            console.log("despues de put en updateurl", transactionBlockchain);
+
     
             console.log(transactionBlockchain.data.transaction);
     
@@ -191,9 +193,8 @@ class PostController {
             await transaction.rollback();
             console.error(`Error al actualizar el post: ${error.message}`);
             throw error;
+     }
     }
-    
-}
 }
 
 module.exports = PostController;

@@ -4,6 +4,7 @@ const Node = require('./nodes/nodes');
 const Transaction = require('./transactions/transaction');
 const Consensus = require('./sync/consensus');
 
+
 class BlockchainService {
     constructor() {
         this.blockchain = new Blockchain();
@@ -16,6 +17,16 @@ class BlockchainService {
         const transaction = new Transaction(author, content, Date.now(), type);
         this.blockchain.pendingTransactions.push(transaction);
         return transaction;
+    }
+
+    // montar blockchain desde la base de datos
+    mountBlockchain(posts){
+        for (let post of posts){
+            const transaction = new Transaction(post.autor_id, post.content, post.date, 'post');
+            transaction.hash = post.hashBlockchain;
+            this.blockchain.pendingTransactions.push(transaction);
+        }
+        return this.blockchain;
     }
 
     // Minar un nuevo bloque con las transacciones pendientes
@@ -52,7 +63,7 @@ class BlockchainService {
 
     // Buscar una transacción por su hash
     getTransactionByHash(hash) {
-        console.log("HOLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",hash, blockchain.chain);
+        console.log(hash, blockchain.chain);
         // Recorre los bloques en la blockchain para encontrar el hash
         for (let block of this.blockchain.chain) {
             if (block.hash === hash) {
@@ -84,18 +95,8 @@ class BlockchainService {
     } */
     updateTransaction(originalHash, autor, content) {
         try{
-            for (let block of this.blockchain.chain) {
-                for (let transaction of block.transactions) {
-                    if (transaction.hash === originalHash) {
-                        transaction.autor = autor;
-                        transaction.content = content;
-                        transaction.timestamp = Date.now();
-                        transaction.hash = transaction.calculateHash();
-                        return transaction;
-    
-                    }
-                }
-            }
+            let transaction= this.getTransactionByHash(originalHash);
+            console.log(transaction);
         }
         catch(error){
             throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);
