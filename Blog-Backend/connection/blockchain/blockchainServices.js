@@ -22,10 +22,11 @@ class BlockchainService {
     // montar blockchain desde la base de datos
     async mountBlockchain(posts) {
         for (let post of posts) {
-            const transaction = this.createTransaction(post.autor_id, post.content, 'post');
+            const transaction = this.createTransaction(post.autor_id, post.content);
             transaction.hash = post.hashBlockchain;
+            this.mineBlock(post.autor_id);
         }
-        return this.blockchain;
+        return true;
     }
 
     // Minar un nuevo bloque con las transacciones pendientes
