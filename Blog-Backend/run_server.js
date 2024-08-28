@@ -67,8 +67,9 @@ blockchainApp.listen(blockchainPort, () => {
 });
 /* Montar blockchain en paralelo */
 const blockchainService = require('./connection/blockchain/blockchainInstance');
+const cron = require('node-cron'); // Librería para programar tareas, en este caso cada 7 días se hará el proceso de re-montar el blockchain
 
-(async () => {
+async function mountBlockchain() {
     try {
         console.log('\x1b[31m%s\x1b[0m', 'Mounting blockchain...');
         // Buscar en la base de datos todos los posts y pasarlos como arreglo a mountBlockchain
@@ -81,6 +82,13 @@ const blockchainService = require('./connection/blockchain/blockchainInstance');
     } catch (error) {
         console.error('\x1b[31m%s\x1b[0m', 'Error mounting blockchain:', error);
     }
-})();
+}
+
+// Montar blockchain inmediatamente al iniciar el componente
+mountBlockchain();
+
+// Programar la tarea para que se ejecute cada 7 días a las 00:00
+cron.schedule('0 0 * * 0', mountBlockchain);
+
 
 //#endregion
