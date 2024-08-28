@@ -4,6 +4,74 @@ const blockchainService = require('./blockchainInstance');
 const dotenv = require('dotenv');
 dotenv.config();
 
+//ruta de docs
+router.get('/docs', (req, res) => {
+    res.json({
+
+        "/create-transaction": {
+            description: 'Create a new transaction',
+            method: 'POST',
+            params: {
+                from: 'String',
+                content: 'String'
+            },
+            returns: 'The newly created transaction'
+        },
+        "/mine-block": {
+            description: 'Mine a new block',
+            method: 'POST',
+            params: {
+                minerAddress: 'String'
+            },
+            returns: 'The newly mined block'
+        },
+        "/blockchain": {
+            description: 'Get the entire blockchain',
+            method: 'GET',
+            params: {},
+            returns: 'The entire blockchain'
+        },
+        "/validate-blockchain": {
+            description: 'Validate the blockchain',
+            method: 'GET',
+            params: {},
+            returns: 'The validation result'
+        },
+        "/blockchain/transaction/:hash": {
+            description: 'Get a transaction by its hash',
+            method: 'GET',
+            params: {
+                hash: 'String'
+            },
+            returns: 'The transaction'
+        },
+        "/add-node": {
+            description: 'Add a new node to the network',
+            method: 'POST',
+            params: {},
+            returns: 'The updated list of nodes'
+        },
+        "/blockchain/block/:index": {
+            description: 'Delete a block by its index',
+            method: 'DELETE',
+            params: {
+                index: 'Number'
+            },
+            returns: 'Success message'
+        },
+        "/update-transaction": {
+            description: 'Update a transaction',
+            method: 'PUT',
+            params: {
+                originalHash: 'post to update',
+            },
+            returns: 'The updated transaction'
+        }
+    });
+});
+
+
+
 // Crear una nueva transacción
 router.post('/create-transaction', (req, res) => {
     const { from, content } = req.body;
