@@ -1,5 +1,4 @@
-const { Sequelize, DataTypes } = require('sequelize');
-
+const { Sequelize } = require('sequelize');
 
 
 const sequelize = new Sequelize({
@@ -57,68 +56,7 @@ Notification.belongsTo(User, { foreignKey: 'user_id' });
 User.hasOne(Config, { foreignKey: 'user_id' });
 Config.belongsTo(User, { foreignKey: 'user_id' });
 
-// Definir modelo Users_backup
-const Users_backups = sequelize.define('Users_backups', {
-  name: DataTypes.STRING,
-  email: DataTypes.STRING,
-  password: DataTypes.STRING,
-  bio: DataTypes.STRING,
-  role: DataTypes.ENUM('admin', 'autor', 'reader'),
-  profileImage: DataTypes.STRING,
-  favorites: DataTypes.ARRAY(DataTypes.INTEGER),
-  posts: DataTypes.ARRAY(DataTypes.INTEGER),
-  validationToken: DataTypes.STRING,
-  tokenExpiration: DataTypes.STRING,
-  createdAt: DataTypes.DATE,
-  updatedAt: DataTypes.DATE
-}, {
-  timestamps: false
-});
 
-// Crear tabla Users_backup si no existe
-sequelize.sync({ alter: true }).then(async () => {
-  try {
-    // Migrar datos de User a Users_backup
-    const users = await User.findAll();
-    for (let user of users) {
-      const existingUser = await Users_backups.findOne({ where: { email: user.email } });
-      if (existingUser) {
-        // Actualizar usuario existente
-        await existingUser.update({
-          name: user.name,
-          password: user.password,
-          bio: user.bio,
-          role: user.role,
-          profileImage: user.profileImage,
-          favorites: user.favorites,
-          posts: user.posts,
-          validationToken: user.validationToken,
-          tokenExpiration: user.tokenExpiration,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        });
-      } else {
-        // Crear nuevo usuario
-        await Users_backups.create({
-          name: user.name,
-          email: user.email,
-          password: user.password,
-          bio: user.bio,
-          role: user.role,
-          profileImage: user.profileImage,
-          favorites: user.favorites,
-          posts: user.posts,
-          validationToken: user.validationToken,
-          tokenExpiration: user.tokenExpiration,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        });
-      }
-    }
-    console.log('Data migration completed successfully.');
-  } catch (error) {
-    console.error('Error migrating data:', error);
-  }
-}).catch(err => console.error('Error al crear tabla Users_backups:', err));
 
-module.exports = { sequelize, User, Posts, Category, Post_Category, Comment, Notification, Reaction, Config, Users_backups };
+
+module.exports = { User, Posts, sequelize, Category, Post_Category, Comment, Notification, Reaction, Config };
