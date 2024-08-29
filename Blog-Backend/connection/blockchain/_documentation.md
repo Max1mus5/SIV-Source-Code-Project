@@ -66,3 +66,11 @@ El mecanismo de consenso es el proceso mediante el cual los nodos de la red lleg
 para manejar una misma instancia de la blockchain, se opto por crear un archivo que contenga esta instancia alamecenada en si misma para de esta forma todo el programa pueda acceder a la misma instancia de la blockchain.
 
 [*ver codigo*](./blockchainInstance.js)
+
+## Construccion de la Blockchain
+
+La blockchain se reconstruye en caso de caerse el servicio, al momento de reiniciar la aplicacacion desde la base de datos, con el hash de la ultima transaccion se reconstruye la blockchain.
+
+[*ver codigo*](../../run_server.js)
+
+y tambien se actualizan las inter-relaciones de los nodos, cada semana, para lograar asi mas dinamismo, esto quiere decir que los enlasces para compartir los post van a tener una vigencia de 7 dias.
