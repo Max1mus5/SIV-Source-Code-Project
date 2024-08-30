@@ -121,12 +121,35 @@ class BlockchainService {
     }
 
     //eliminar un bloque por su índice
-    removeBlockByIndex(index) {
-        if (index >= 0 && index < this.blockchain.length) {
-            this.blockchain.splice(index, 1);
-            return true;
+    /* //eliminar un bloque
+router.delete('/blockchain/block/:index', (req, res) => {
+    const { index } = req.params;
+    try {
+        const isDeleted = blockchainService.removeBlockByIndex(parseInt(index));
+        if (isDeleted) {
+            res.status(200).json({ message: 'Bloque eliminado exitosamente' });
+        } else {
+            res.status(404).json({ message: 'Bloque no encontrado' });
         }
-        return false;
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}); */
+    getNextBlockIndex(index){
+        // Recorre los bloques en la blockchain para encontrar el index
+        for (let block of this.blockchain.chain) {
+            if (block.index === index) {
+                console.log( block.index);
+                return block;
+                
+            }
+        }
+        throw new Error(`No se encontró una transacción o bloque con el index: ${index}`);
+    }
+
+    removeBlockByhash(hash) {
+        let transaction = this.getTransactionByHash(hash);
+        let index = transaction.index;
     }
 }
 
