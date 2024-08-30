@@ -135,21 +135,42 @@ router.delete('/blockchain/block/:index', (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }); */
-    getNextBlockIndex(index){
+    getBlockIndex(index){
         // Recorre los bloques en la blockchain para encontrar el index
         for (let block of this.blockchain.chain) {
             if (block.index === index) {
                 console.log( block.index);
                 return block;
-                
             }
         }
         throw new Error(`No se encontró una transacción o bloque con el index: ${index}`);
     }
 
+    reindexationBlockchain(startIndex){
+        try{
+            let count = 0;
+            for(let block of this.blockchain.chain){
+                if(block.index>startIndex){
+                    block.index=startIndex+count;
+                }
+                count++;
+            }
+            return true;
+        }
+        catch(error){
+            throw new Error(`No se encontró una transacción con el index: ${startIndex}`);
+        }
+    }
+
     removeBlockByhash(hash) {
         let transaction = this.getTransactionByHash(hash);
         let index = transaction.index;
+        let nextBlockIndex = this.getBlockIndex(index+1);
+        nextBlockIndex.previousHash = transaction.previousHash;
+        this.reindexationBlockchain(index);
+        /* destroy block object */
+        this.blockchain.chain.splice(indexToRemove, 1);
+        return true;
     }
 }
 

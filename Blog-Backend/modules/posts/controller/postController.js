@@ -222,7 +222,7 @@ router.delete('/blockchain/block/:index', (req, res) => {
             if (!post) {
                 throw new Error('Post no encontrado');
             }
-
+            console.log(post.hashBlockchain);
             // Eliminar la transacción en la blockchain
             const deletedTransaction = await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`);
             console.log(`${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`,deletedTransaction.status);
