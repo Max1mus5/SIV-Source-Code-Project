@@ -16,6 +16,7 @@ class BlockchainService {
     createTransaction(author, content, type = 'post') {
         const transaction = new Transaction(author, content, Date.now(), type);
         this.blockchain.pendingTransactions.push(transaction);
+        console.log("is validate chain?",this.isValidChain());
         return transaction;
     }
 
@@ -63,15 +64,18 @@ class BlockchainService {
 
     // Buscar una transacción por su hash
     getTransactionByHash(hash) {
-        // Recorre los bloques en la blockchain para encontrar el hash
-        for (let block of this.blockchain.chain) {
+       try{
+         // Recorre los bloques en la blockchain para encontrar el hash
+         for (let block of this.blockchain.chain) {
             if (block.data[0].hash === hash) {
                 console.log( block.data[0].hash);
                 return block;
             }
         }
-
-        throw new Error(`No se encontró una transacción o bloque con el hash: ${hash}`);
+       }
+         catch(error){
+              throw new Error(`No se encontró una transacción con el hash: ${hash}`);
+         }
     }
 
     updateTransaction(originalHash, autor, content) {
@@ -136,14 +140,18 @@ router.delete('/blockchain/block/:index', (req, res) => {
     }
 }); */
     getBlockIndex(index){
-        // Recorre los bloques en la blockchain para encontrar el index
-        for (let block of this.blockchain.chain) {
-            if (block.index === index) {
-                console.log("el siguiente bloque tiene como index:",block.index);
-                return block;
+        try{
+            // Recorre los bloques en la blockchain para encontrar el index
+            for (let block of this.blockchain.chain) {
+                if (block.index === index) {
+                    console.log("el siguiente bloque tiene como index:",block.index);
+                    return block;
+                }
             }
         }
-        throw new Error(`No se encontró una transacción o bloque con el index: ${index}`);
+        catch(error){
+            throw new Error(`No se encontró un bloque con el index: ${index}`);
+        }
     }
 
     reindexationBlockchain(startIndex){
@@ -163,17 +171,23 @@ router.delete('/blockchain/block/:index', (req, res) => {
     }
 
     removeBlockByhash(hash) {
-        let transaction = this.getTransactionByHash(hash);
-        console.log("en removeBlockByhash", transaction);
-        let index = transaction.index;
-        let nextBlockIndex = this.getBlockIndex(index+1);
-        nextBlockIndex.previousHash = transaction.previousHash;
-        console.log("en removeBlockByhash", nextBlockIndex.previousHash);
-        this.blockchain.chain.splice(index, 1);
-        console.log(this.reindexationBlockchain(index));
-        /* destroy block object */
-        
-        return true;
+        try{
+            let transaction = this.getTransactionByHash(hash);
+            console.log("en removeBlockByhash", transaction);
+            let index = transaction.index;
+            console.log("en removeBlockByhash", index);
+            let nextBlockIndex = this.getBlockIndex(index+1);
+            nextBlockIndex.previousHash = transaction.previousHash;
+            
+            this.blockchain.chain.splice(index, 1);
+            console.log(this.reindexationBlockchain(index));
+            /* destroy block object */
+            
+            return true;
+        }
+        catch(error){
+            throw new Error(`No se encontró una transacción con el hash: ${hash}`);
+        }
     }
 }
 

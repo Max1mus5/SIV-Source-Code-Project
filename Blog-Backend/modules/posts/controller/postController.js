@@ -215,7 +215,6 @@ router.delete('/blockchain/block/:index', (req, res) => {
 
    async deletePost(postId) {
         const transaction = await sequelize.transaction();
-        let blockIndex;
         try {
             // Obtener el post original de la base de datos
             const post = await Posts.findByPk(postId, { transaction });
@@ -236,10 +235,6 @@ router.delete('/blockchain/block/:index', (req, res) => {
             console.log(`Post eliminado con ID: ${postId}`);
             return deletedPost;
         } catch (error) {
-            if (blockIndex !== undefined) {
-                // Eliminar el bloque en caso de error
-                await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${blockIndex}`);
-            }
             await transaction.rollback();
             console.error(`Error al eliminar el post: ${error.message}`);
             throw error;
