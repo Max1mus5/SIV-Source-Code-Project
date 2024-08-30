@@ -27,7 +27,7 @@ class PostController {
                 postData.title,
                 postData.content,
                 postData.image,
-                postData.date,
+                new Date().toISOString(),
                 postData.hashBlockchain,
                 postData.likes,
                 postData.comments
