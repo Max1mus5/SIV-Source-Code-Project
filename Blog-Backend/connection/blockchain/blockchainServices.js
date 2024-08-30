@@ -79,8 +79,9 @@ class BlockchainService {
             let transaction= this.getTransactionByHash(originalHash);
             transaction.data[0].author=autor;
             transaction.data[0].content=content;
-            transaction.timestamp = Date.now();
-            
+            transaction.data[0].timestamp = Date.now();
+            transaction.timestamp = new Date().toISOString();
+            return transaction;
         }
         catch(error){
             throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);

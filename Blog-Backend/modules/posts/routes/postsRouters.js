@@ -38,7 +38,7 @@ router.put('/update-publication', async (req, res) => {
     const postController = new PostController();
     try {
         const updatedPost = await postController.updatePost(req.body);
-        res.status(200).json(updatedPost);
+        res.status(200).json({ message: 'Post updated', updatedPost });
     } catch (error) {
         handleErrorResponse(res, error);
     }

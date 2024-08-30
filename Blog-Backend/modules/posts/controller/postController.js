@@ -149,30 +149,18 @@ class PostController {
             }
     
             // Actualizar la transacción en la blockchain
-            console.log("antes de put en updateurl")
             const transactionBlockchain = await axios.put(`${baseURL}:${blockchainPort}/blockchain/update-transaction`, {
                 originalHash: originalPost.hashBlockchain,
                 autor: updatedPostInstance.autor,
                 content: updatedPostInstance.content
             });
-            console.log("despues de put en updateurl", transactionBlockchain);
-
-    
-            console.log(transactionBlockchain.data.transaction);
-    
-            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/mine-block`, {
-                minerAddress: postData.minerAddress 
-            });
-    
-            blockIndex = newBlock.data.block.index; 
-    
-            updatedPostInstance.hashBlockchain = newBlock.data.block.hash;
-    
+            console.log(`${baseURL}:${blockchainPort}/blockchain/update-transaction`,transactionBlockchain.status);
+            
             const updatedPost = await Posts.update({
                 autor_id: updatedPostInstance.autor,
-                date: updatedPostInstance.date,
+                date: transactionBlockchain.data.transaction.timestamp,
                 title: updatedPostInstance.title,
-                content: updatedPostInstance.content,
+                content: transactionBlockchain.data.transaction.data[0].content,
                 post_image: updatedPostInstance.image,
                 likes: updatedPostInstance.likes,
                 comments: updatedPostInstance.comments,
