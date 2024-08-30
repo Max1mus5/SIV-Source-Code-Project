@@ -49,7 +49,7 @@ router.delete('/delete-publication/:postid', async (req, res) => {
     try {
         let postId = req.params.postid;
         const deletedPost = await postController.deletePost(postId);
-        res.status(200).json(deletedPost);
+        res.status(200).json({message: 'Post Deleted',deletedPost});
     } catch (error) {
         handleErrorResponse(res, error);
     }
