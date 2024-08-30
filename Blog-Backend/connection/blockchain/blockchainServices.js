@@ -63,40 +63,24 @@ class BlockchainService {
 
     // Buscar una transacción por su hash
     getTransactionByHash(hash) {
-        console.log(hash, blockchain.chain);
         // Recorre los bloques en la blockchain para encontrar el hash
         for (let block of this.blockchain.chain) {
-            if (block.hash === hash) {
-                console.log(block.hash);
-                // Devuelve la información relevante del bloque y las transacciones
-                return {
-                    hash: block.hash,
-                    timestamp: block.timestamp,
-                    transactions: block.transactions,
-                    previousHash: block.previousHash,
-                    nonce: block.nonce
-                };
+            if (block.data[0].hash === hash) {
+                console.log( block.data[0].hash);
+                return block;
             }
         }
 
         throw new Error(`No se encontró una transacción o bloque con el hash: ${hash}`);
     }
 
-    /* router.put('/update-transaction', (req, res) => {
-    const { originalHash, author, content } = req.body;
-    try {
-        const updatedTransaction = blockchainService.updateTransaction(originalHash, author, content);
-        res.status(200).json({
-            message: 'Transacción actualizada exitosamente',
-            transaction: updatedTransaction
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    } */
     updateTransaction(originalHash, autor, content) {
         try{
             let transaction= this.getTransactionByHash(originalHash);
-            console.log(transaction);
+            transaction.data[0].author=autor;
+            transaction.data[0].content=content;
+            transaction.timestamp = Date.now();
+            
         }
         catch(error){
             throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);
