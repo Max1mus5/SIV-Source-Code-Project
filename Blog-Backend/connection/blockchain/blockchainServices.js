@@ -139,7 +139,7 @@ router.delete('/blockchain/block/:index', (req, res) => {
         // Recorre los bloques en la blockchain para encontrar el index
         for (let block of this.blockchain.chain) {
             if (block.index === index) {
-                console.log( block.index);
+                console.log("el siguiente bloque tiene como index:",block.index);
                 return block;
             }
         }
@@ -148,13 +148,13 @@ router.delete('/blockchain/block/:index', (req, res) => {
 
     reindexationBlockchain(startIndex){
         try{
-            let count = 0;
             for(let block of this.blockchain.chain){
                 if(block.index>startIndex){
-                    block.index=startIndex+count;
+                    block.index=startIndex;
+                    startIndex++;
                 }
-                count++;
             }
+            console.log("is valid chain?",this.isValidChain());
             return true;
         }
         catch(error){
@@ -164,12 +164,15 @@ router.delete('/blockchain/block/:index', (req, res) => {
 
     removeBlockByhash(hash) {
         let transaction = this.getTransactionByHash(hash);
+        console.log("en removeBlockByhash", transaction);
         let index = transaction.index;
         let nextBlockIndex = this.getBlockIndex(index+1);
         nextBlockIndex.previousHash = transaction.previousHash;
-        this.reindexationBlockchain(index);
+        console.log("en removeBlockByhash", nextBlockIndex.previousHash);
+        this.blockchain.chain.splice(index, 1);
+        console.log(this.reindexationBlockchain(index));
         /* destroy block object */
-        this.blockchain.chain.splice(indexToRemove, 1);
+        
         return true;
     }
 }
