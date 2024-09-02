@@ -92,6 +92,8 @@ router.get('/docs', (req, res) => {
           });
 });
 
+// #region Routes
+
 // verify account by email
 router.get("/verify/:token", async (req, res) => {
     try {

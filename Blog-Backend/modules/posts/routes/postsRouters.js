@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const PostController = require('../controller/postController');
 const { handleErrorResponse } = require('../utils/utils');
+const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
 
-router.post('/create-new-publication', async (req, res) => {
+//#region Routes
+router.post('/create-new-publication', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
         const newPost = await postController.createPost(req.body);
@@ -13,7 +15,7 @@ router.post('/create-new-publication', async (req, res) => {
     }
 });
 
-router.get('/:hash/:autor', async (req, res) => {
+router.get('/:hash/:autor',  async (req, res) => {
     const postController = new PostController();
     const { hash, autor } = req.params;
     try {
@@ -24,7 +26,7 @@ router.get('/:hash/:autor', async (req, res) => {
     }
 });
 
-router.get('/my-feed', async (req, res) => {
+router.get('/my-feed', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
         const result = await postController.getAllPosts();
@@ -34,7 +36,7 @@ router.get('/my-feed', async (req, res) => {
     }
 });
 
-router.put('/update-publication', async (req, res) => {
+router.put('/update-publication', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
         const updatedPost = await postController.updatePost(req.body);
@@ -44,7 +46,7 @@ router.put('/update-publication', async (req, res) => {
     }
 });
 
-router.delete('/delete-publication/:postid', async (req, res) => {
+router.delete('/delete-publication/:postid',authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
         let postId = req.params.postid;
@@ -55,7 +57,7 @@ router.delete('/delete-publication/:postid', async (req, res) => {
     }
 });
 
-
+//#region Documentation
 router.get('/docs', (req, res) => {
     res.json({
         "/create-new-publication": {
@@ -80,8 +82,26 @@ router.get('/docs', (req, res) => {
             method: 'GET',
             params: {},
             returns: 'All posts'
-        }
+        },
+        "/update-publication": {
+            description: 'Update a publication',
+            method: 'PUT',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The updated post'
+        },
+        "/delete-publication/:postid": {
+            description: 'Delete a publication by id',
+            method: 'DELETE',
+            params: {
+                postid: 'String'
+            },
+            returns: 'The deleted post'
+        },
+        
     });
+
 
 
 });
