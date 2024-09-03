@@ -1,6 +1,6 @@
 const { sequelize } = require('../../../connection/db/database');
 const commentInstance = require('../model/commmentInstance');
-const { Comments } = require('../../../connection/db/schemas/comments-schema/commentSchema');
+const { Comment } = require('../../../connection/db/schemas/comments-schema/commentSchema');
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
 const { validateRequiredFields } = require('../utils/utils');
 const dotenv = require('dotenv');
@@ -20,6 +20,7 @@ class CommentController {
                 new Date().toISOString(),
                 commentData.postHash
             );
+            console.log(newCommentInstance);
             
             // Crear el comentario en la base de datos con la transacción activa
             const newComment = await Comments.create({
@@ -35,7 +36,7 @@ class CommentController {
               
 
             await transaction.commit();
-            return newCommentInstance;
+            return newComment;
         } catch (error) {
             await transaction.rollback();
             throw error;
