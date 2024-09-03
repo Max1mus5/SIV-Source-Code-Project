@@ -171,9 +171,7 @@ class BlockchainService {
             
             this.blockchain.chain.splice(index, 1);
             console.log(this.reindexationBlockchain(index));
-            console.log("is valid chain?",this.isValidChain());
-            /* destroy block object */
-            
+            console.log("is valid chain?",this.isValidChain());            
             return true;
         }
         catch(error){
