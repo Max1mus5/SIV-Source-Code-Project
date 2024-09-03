@@ -15,10 +15,6 @@ const Comment = sequelize.define("Comment", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  comment_id:{
-    type: DataTypes.INTEGER,// it will works for answers, a comment can have a comment as an answer
-    allowNull: true // if it is null, it means that it is a comment to a post, else it is a comment to a comment
-  },
   content: {
     type: DataTypes.STRING,
     allowNull: false,

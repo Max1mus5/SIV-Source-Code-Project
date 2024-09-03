@@ -2,6 +2,7 @@ const { sequelize } = require('../../database');
 const { DataTypes } = require('sequelize');
 
 const Posts = sequelize.define("Posts", {
+
   autor_id:{
     type: DataTypes.INTEGER,
     allowNull: false
@@ -31,9 +32,10 @@ const Posts = sequelize.define("Posts", {
     allowNull: false, 
   },
   comments:{
-    type: DataTypes.ARRAY(DataTypes.JSON),
+    type: DataTypes.INTEGER,
     allowNull: true,
   },
-});
 
+});
+  
 module.exports = { Posts };
