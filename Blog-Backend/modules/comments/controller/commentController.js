@@ -20,19 +20,18 @@ class CommentController {
                 new Date().toISOString(),
                 commentData.postHash
             );
-            console.log(newCommentInstance);
-            
-            // Crear el comentario en la base de datos con la transacción activa
-            const newComment = await Comments.create({
-                autor_id: newCommentInstance.autor,
-                date: newCommentInstance.date,
-                content: newCommentInstance.content,
-                postHash: newCommentInstance.postHash,
-            }, { transaction });
               
             // Actualizar cantidad de comentario asociados al post en la base de datos
             const post = await Posts.findOne({ where: { hashBlockchain: newCommentInstance.postHash } }, { transaction });
             post.comments = post.comments + 1;
+
+             // Crear el comentario en la base de datos con la transacción activa
+             const newComment = await Comment.create({
+                user_id: newCommentInstance.autor,
+                post_id:post.id,
+                content: newCommentInstance.content,
+                creationDate: newCommentInstance.date,
+            }, { transaction });
               
 
             await transaction.commit();

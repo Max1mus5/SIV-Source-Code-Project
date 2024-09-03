@@ -20,7 +20,7 @@ const Comment = sequelize.define("Comment", {
     allowNull: false,
   },
   creationDate: {
-    type: DataTypes.DATE,
+    type: DataTypes.STRING,
     allowNull: false,
   },
 });
