@@ -15,3 +15,5 @@ router.post('/create-comment', async (req, res) => {
     }
 });
 
+
+module.exports = router;

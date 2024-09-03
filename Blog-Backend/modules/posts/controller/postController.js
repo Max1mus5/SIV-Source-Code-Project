@@ -4,7 +4,6 @@ const PostInstance = require('../model/postInstance');
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
 const { validateRequiredFields, convertToInt } = require('../utils/utils');
 const dotenv = require('dotenv');
-const { hash } = require('crypto');
 dotenv.config();
 
 
