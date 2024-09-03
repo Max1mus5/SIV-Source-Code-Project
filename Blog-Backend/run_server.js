@@ -3,6 +3,7 @@ const app = express();
 const userRoutes = require('./modules/user/routes/userRoutes');
 const resetPasswordRoutes = require('./modules/user/routes/recoverPassword');
 const postRoutes = require('./modules/posts/routes/postsRouters');
+const commentRoutes = require('./modules/comments/routes/commentsRouter');
 const { sequelize } = require('./connection/db/database');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -17,6 +18,7 @@ app.use(cors({
 app.use('/user', userRoutes);
 app.use('/reset', resetPasswordRoutes);
 app.use('/post', postRoutes);
+app.use('/comments',commentRoutes);
 
 
 const port = process.env.PORT || 3000;
