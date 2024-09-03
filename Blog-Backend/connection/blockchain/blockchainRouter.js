@@ -124,7 +124,7 @@ router.get('/validate-blockchain', (req, res) => {
     }
 });
 
-router.get('/blockchain/transaction/:hash', (req, res) => {
+router.get('/transaction/:hash', (req, res) => {
     const { hash } = req.params;
     try {
         const transaction = blockchainService.getTransactionByHash(hash);
