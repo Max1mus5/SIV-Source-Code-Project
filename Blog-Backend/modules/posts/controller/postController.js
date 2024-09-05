@@ -29,7 +29,7 @@ class PostController {
                 new Date().toISOString(),
                 postData.hashBlockchain,
                 postData.likes,
-                postData.comments
+                0
             );
 
             // Crear la transacción en la blockchain

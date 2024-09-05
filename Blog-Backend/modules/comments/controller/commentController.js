@@ -52,7 +52,7 @@ class CommentController {
                 creationDate: newCommentInstance.date,
                 comment_id: answerComment ? answerComment.id : null
             }, { transaction });
-
+            post.comments += 1;
             await transaction.commit();
             return newComment;
         } catch (error) {
