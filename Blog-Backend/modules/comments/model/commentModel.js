@@ -1,9 +1,9 @@
 class Comment {
-  constructor(autor, content, date, postHash) {
+  constructor(autor, content, date,  post_id, comment_id) {
       this._autor = autor;
       this._content = content;
       this._date = date;
-      this._postHash = postHash;
+      this._post_id =  post_id;
   }
 
   get autor() {
@@ -30,13 +30,21 @@ class Comment {
       this._date = value;
   }
 
-  get postHash() {
-      return this._postHash;
+  get  post_id() {
+      return this._post_id;
   }
 
-  set postHash(value) {
-      this._postHash = value;
+  set  post_id(value) {
+      this._post_id = value;
   }
+  
+  get comment_id() {
+        return this._comment_id;
+    }
+  
+  set comment_id(value) {
+        this._comment_id = value;
+    }
 }
 
 module.exports = Comment;
