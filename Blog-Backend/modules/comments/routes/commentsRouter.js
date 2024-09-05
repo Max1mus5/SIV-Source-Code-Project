@@ -16,6 +16,16 @@ router.post('/create-comment', async (req, res) => {
 });
 
 
+router.get('/get-comments/:post_id', async (req, res) => {
+    const commentController = new CommentController();
+    try {
+        const comments = await commentController.getComments(req.params.post_id);
+        res.status(200).json(comments);
+    } catch (error) {
+        handleErrorResponse(res, error);
+    }
+});
+
 
 
 module.exports = router;

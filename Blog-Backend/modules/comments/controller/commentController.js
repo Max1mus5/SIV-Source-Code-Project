@@ -21,7 +21,6 @@ class CommentController {
                 new Date().toISOString(),
                 commentData.answerComment_id
             );
-            console.log(newCommentInstance);
 
             let postid = parseInt(commentData.post_id, 10)
             const post = await Posts.findOne({ where: { id: postid }, transaction });
@@ -61,6 +60,40 @@ class CommentController {
             throw error;
         }
     }
+
+
+    async getComments(post_id) {
+        //obtain comments asosciated to a post
+        const comments = await Comment.findAll({ where: { post_id: post_id } });
+
+        //order comments by creation date
+        comments.sort((a, b) => {
+            return new Date(a.creationDate) - new Date(b.creationDate);
+        });
+
+        //order comments by parent comment
+        const orderedComments = [];
+        comments.forEach(comment => {
+            if (!comment.comment_id) {
+                orderedComments.push(comment);
+            }
+        });
+        
+        //order child comments recursively
+        const orderChildComments = (comment) => {
+            const children = comments.filter(child => child.comment_id === comment.id);
+            children.forEach(child => {
+                orderedComments.push(child);
+                orderChildComments(child);
+            });
+        };
+
+        orderedComments.forEach(comment => {
+            orderChildComments(comment);
+        });
+
+        return orderedComments;
+    };
 }
 
 module.exports = CommentController;
