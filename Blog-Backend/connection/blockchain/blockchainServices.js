@@ -82,7 +82,7 @@ class BlockchainService {
             if (!block) {
                 return new Error(`No se encontró una transacción con el hash: ${hash}`);
             }
-            console.log("Bloque encontrado:", block);
+            //console.log("Bloque encontrado:", block);
             const transaction = block.data.find(tx => tx.hash === hash);
             if (!transaction) {
                 throw new Error(`No se encontró una transacción con el hash: ${hash}`);
