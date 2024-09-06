@@ -1,15 +1,29 @@
+
 const Blockchain = require('./chains/blockchain');
 const Block = require('./blocks/block');
 const Node = require('./nodes/nodes');
 const Transaction = require('./transactions/transaction');
 const Consensus = require('./sync/consensus');
 
-
 class BlockchainService {
     constructor() {
         this.blockchain = new Blockchain();
         this.node = new Node(this.blockchain);
         this.consensus = new Consensus(this.blockchain, this.node);
+        this.transactionMap = new Map(); // Mapa para almacenar transacciones por hash
+        this.blockIndexMap = new Map(); // Mapa para almacenar bloques por índice
+
+        // Llenar los mapas con los datos existentes al inicializar
+        this.blockchain.chain.forEach(block => {
+            this.blockIndexMap.set(block.index, block);
+            if (block.data && Array.isArray(block.data)) {
+                block.data.forEach(transaction => {
+                    if (transaction.hash) {
+                        this.transactionMap.set(transaction.hash, block);
+                    }
+                });
+            }
+        });
     }
 
     // Crear una nueva transacción
@@ -62,36 +76,74 @@ class BlockchainService {
         return this.consensus.consensusAlgorithm(this.node, this.blockchain);
     }
 
-    // Buscar una transacción por su hash
     async getTransactionByHash(hash) {
         try {
-            // Recorre los bloques en la blockchain para encontrar el hash
-            for (let block of this.blockchain.chain) {
-                if (block.data[0].hash === hash) {
-                    console.log(block.data[0].hash);
-                    return block;
-                }
+            const block = await this.transactionMap.get(hash);
+            if (!block) {
+                return new Error(`No se encontró una transacción con el hash: ${hash}`);
             }
+            console.log("Bloque encontrado:", block);
+            const transaction = block.data.find(tx => tx.hash === hash);
+            if (!transaction) {
+                throw new Error(`No se encontró una transacción con el hash: ${hash}`);
+            }
+            return transaction;
         } catch (error) {
-            throw new Error(`No se encontró una transacción con el hash: ${hash}`);
+            throw new Error(`Error al obtener la transacción: ${error.message}`);
         }
+    }
+
+    getBlockIndex(index) {
+        const block = this.blockIndexMap.get(index);
+        if (!block) {
+            throw new Error(`No se encontró un bloque con el index: ${index}`);
+        }
+        console.log("el siguiente bloque tiene como index:", block.index);
+        return block;
+    }
+
+    createTransaction(author, content, type = 'post') {
+        const transaction = new Transaction(author, content, Date.now(), type);
+        this.blockchain.pendingTransactions.push(transaction);
+        console.log("is validate chain?", this.isValidChain());
+        return transaction;
+    }
+
+    mineBlock(minerAddress) {
+        const newBlock = this.blockchain.minePendingTransactions(minerAddress);
+        this.node.broadcastBlock(newBlock);
+        
+        // Actualizar los mapas con el nuevo bloque
+        this.blockIndexMap.set(newBlock.index, newBlock);
+        newBlock.data.forEach(transaction => {
+            this.transactionMap.set(transaction.hash, newBlock);
+        });
+
+        return newBlock;
     }
 
     updateTransaction(originalHash, autor, content) {
-        try{
-            let transaction= this.getTransactionByHash(originalHash);
-            transaction.data[0].author=autor;
-            transaction.data[0].content=content;
-            transaction.data[0].timestamp = Date.now();
-            transaction.timestamp = new Date().toISOString();
+        try {
+            let block = this.getTransactionByHash(originalHash);
+            let transaction = block.data.find(t => t.hash === originalHash);
+            if (!transaction) {
+                throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);
+            }
+            transaction.author = autor;
+            transaction.content = content;
+            transaction.timestamp = Date.now();
+            block.timestamp = new Date().toISOString();
+            block.hash = block.calculateHash(); // Recalcular el hash del bloque
+
+            // Actualizar el mapa de transacciones
+            this.transactionMap.set(transaction.hash, block);
+
             return transaction;
-        }
-        catch(error){
-            throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);
+        } catch (error) {
+            throw new Error(`Error al actualizar la transacción: ${error.message}`);
         }
     }
 
-    // Reorganizar la blockchain en base a los hashes
     reorganizeBlockchain(startIndex = 0) {
         let previousBlock = this.blockchain.chain[startIndex - 1] || null;
         for (let i = startIndex; i < this.blockchain.chain.length; i++) {
@@ -100,43 +152,38 @@ class BlockchainService {
                 console.log(`Inconsistencia encontrada en el bloque ${i}`);
                 currentBlock.previousHash = previousBlock.hash;
                 currentBlock.hash = currentBlock.calculateHash();
+                
+                // Actualizar los mapas
+                this.blockIndexMap.set(currentBlock.index, currentBlock);
+                currentBlock.data.forEach(transaction => {
+                    this.transactionMap.set(transaction.hash, currentBlock);
+                });
             }
             previousBlock = currentBlock;
         }
-    
+
         if (this.isValidChain()) {
             console.log('Blockchain reorganizada correctamente.');
         } else {
             throw new Error('Error al reorganizar la blockchain.');
         }
     }
-    
 
-    getBlockIndex(index){
-        try{
-            // Recorre los bloques en la blockchain para encontrar el index
-            for (let block of this.blockchain.chain) {
-                if (block.index === index) {
-                    console.log("el siguiente bloque tiene como index:",block.index);
-                    return block;
-                }
+    reindexationBlockchain(startIndex) {
+        try {
+            for (let i = startIndex; i < this.blockchain.chain.length; i++) {
+                const block = this.blockchain.chain[i];
+                block.index = i;
+                
+                // Actualizar los mapas
+                this.blockIndexMap.set(i, block);
+                block.data.forEach(transaction => {
+                    this.transactionMap.set(transaction.hash, block);
+                });
             }
-            return null;
-        }
-        catch(error){
-            throw new Error(`No se encontró un bloque con el index: ${index}`);
-        }
-    }
-
-    reindexationBlockchain(startIndex){
-        try{
-            for(let i = startIndex + 1; i < this.blockchain.chain.length; i++) {
-                    this.blockchain.chain[i].index = i;
-                }          
             return true;
-        }
-        catch(error){
-            throw new Error(`No se encontró una transacción con el index: ${startIndex}`);
+        } catch (error) {
+            throw new Error(`Error al reindexar la blockchain: ${error.message}`);
         }
     }
 
@@ -180,7 +227,8 @@ class BlockchainService {
             throw error;
         }
     }
-    
 }
 
-module.exports = BlockchainService;
+module.exports = BlockchainService; 
+
+   
