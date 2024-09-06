@@ -95,33 +95,25 @@ class BlockchainService {
 
 
     // Reorganizar la blockchain en base a los hashes
-    reorganizeBlockchain() {
-        let previousBlock = null;
-        for (let i = 0; i < this.blockchain.chain.length; i++) {
+    reorganizeBlockchain(startIndex = 0) {
+        let previousBlock = this.blockchain.chain[startIndex - 1] || null;
+        for (let i = startIndex; i < this.blockchain.chain.length; i++) {
             const currentBlock = this.blockchain.chain[i];
-
-            if (previousBlock) {
-                // Si el hash previo del bloque actual no coincide con el hash del bloque anterior
-                if (currentBlock.previousHash !== previousBlock.hash) {
-                    console.error(`Inconsistencia encontrada: el bloque ${i} tiene un hash anterior incorrecto.`);
-                    // Corregir la inconsistencia
-                    currentBlock.previousHash = previousBlock.hash;
-                    currentBlock.hash = currentBlock.calculateHash();
-                    console.log(`Bloque ${i} corregido: nuevo hash es ${currentBlock.hash}`);
-                }
+            if (previousBlock && currentBlock.previousHash !== previousBlock.hash) {
+                console.log(`Inconsistencia encontrada en el bloque ${i}`);
+                currentBlock.previousHash = previousBlock.hash;
+                currentBlock.hash = currentBlock.calculateHash();
             }
-
-            // Continuar con el siguiente bloque
             previousBlock = currentBlock;
         }
-
-        // Después de la reorganización, verificar si la cadena es válida
+    
         if (this.isValidChain()) {
-            console.log('La blockchain ha sido reorganizada y es válida.');
+            console.log('Blockchain reorganizada correctamente.');
         } else {
-            throw new Error('No se pudo reorganizar la blockchain correctamente.');
+            throw new Error('Error al reorganizar la blockchain.');
         }
     }
+    
 
     getBlockIndex(index){
         try{
@@ -141,12 +133,9 @@ class BlockchainService {
 
     reindexationBlockchain(startIndex){
         try{
-            for(let block of this.blockchain.chain){
-                if(block.index>startIndex){
-                    block.index=startIndex;
-                    startIndex++;
-                }
-            }
+            for(let i = startIndex + 1; i < this.blockchain.chain.length; i++) {
+                    this.blockchain.chain[i].index = i;
+                }          
             return true;
         }
         catch(error){
