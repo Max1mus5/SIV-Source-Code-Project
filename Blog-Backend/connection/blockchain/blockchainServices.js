@@ -91,9 +91,6 @@ class BlockchainService {
         }
     }
 
-
-
-
     // Reorganizar la blockchain en base a los hashes
     reorganizeBlockchain(startIndex = 0) {
         let previousBlock = this.blockchain.chain[startIndex - 1] || null;
