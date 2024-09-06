@@ -183,62 +183,38 @@ class PostController {
      }
     }
 
-    /* 
-router.delete('/delete-publication/:postid', async (req, res) => {
-    const postController = new PostController();
-    try {
-        let postId = req.params.postid;
-        const deletedPost = await postController.deletePost(postId);
-        res.status(200).json(deletedPost);
-    } catch (error) {
-        handleErrorResponse(res, error);
-    }
-}); 
-
-
-para solicitud en blockchain://eliminar un bloque
-router.delete('/blockchain/block/:index', (req, res) => {
-    const { index } = req.params;
-    try {
-        const isDeleted = blockchainService.removeBlockByIndex(parseInt(index));
-        if (isDeleted) {
-            res.status(200).json({ message: 'Bloque eliminado exitosamente' });
-        } else {
-            res.status(404).json({ message: 'Bloque no encontrado' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-*/
-
    async deletePost(postId) {
-        const transaction = await sequelize.transaction();
-        try {
-            // Obtener el post original de la base de datos
-            const post = await Posts.findByPk(postId, { transaction });
-            if (!post) {
-                throw new Error('Post no encontrado');
-            }
-            console.log(post.hashBlockchain);
-            // Eliminar la transacción en la blockchain
-            const deletedTransaction = await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`);
-            console.log(`${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`,deletedTransaction.status);
-            // Eliminar el post de la base de datos
-            const deletedPost = await Posts.destroy({
-                where: { id: postId },
-                transaction
-            });
-
-            await transaction.commit();
-            console.log(`Post eliminado con ID: ${postId}`);
-            return deletedPost;
-        } catch (error) {
-            await transaction.rollback();
-            console.error(`Error al eliminar el post: ${error.message}`);
-            throw error;
+    const transaction = await sequelize.transaction();
+    try {
+        // Obtener el post de la base de datos
+        const post = await Posts.findByPk(postId, { transaction });
+        if (!post) {
+            throw new Error('Post no encontrado');
         }
+        // Eliminar la transacción en la blockchain
+        const blockchainURL = `${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`;
+        const deletedTransaction = await axios.delete(blockchainURL);
+
+        if (deletedTransaction.status !== 200) {
+            throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);
+        }
+        
+        // Eliminar el post de la base de datos
+        const deletedPost = await Posts.destroy({
+            where: { id: postId },
+            transaction
+        });
+
+        await transaction.commit();
+        console.log(`Post eliminado con ID: ${postId}`);
+        return deletedPost;
+    } catch (error) {
+        await transaction.rollback();
+        console.error(`Error al eliminar el post: ${error.message}`);
+        throw error;
     }
+}
+
     
 
 }

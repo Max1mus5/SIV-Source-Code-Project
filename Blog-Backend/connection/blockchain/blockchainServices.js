@@ -63,19 +63,18 @@ class BlockchainService {
     }
 
     // Buscar una transacción por su hash
-    getTransactionByHash(hash) {
-       try{
-         // Recorre los bloques en la blockchain para encontrar el hash
-         for (let block of this.blockchain.chain) {
-            if (block.data[0].hash === hash) {
-                console.log( block.data[0].hash);
-                return block;
+    async getTransactionByHash(hash) {
+        try {
+            // Recorre los bloques en la blockchain para encontrar el hash
+            for (let block of this.blockchain.chain) {
+                if (block.data[0].hash === hash) {
+                    console.log(block.data[0].hash);
+                    return block;
+                }
             }
+        } catch (error) {
+            throw new Error(`No se encontró una transacción con el hash: ${hash}`);
         }
-       }
-         catch(error){
-              throw new Error(`No se encontró una transacción con el hash: ${hash}`);
-         }
     }
 
     updateTransaction(originalHash, autor, content) {
@@ -155,29 +154,47 @@ class BlockchainService {
         }
     }
 
-    removeBlockByhash(hash) {
-        try{
-            console.log("en removeBlockByhash",hash);
-            let transaction = this.getTransactionByHash(hash);
+    async removeBlockByhash(hash) {
+        try {
+            let transaction = await this.getTransactionByHash(hash);
+            if (!transaction) {
+                console.log("no se encontro una transaccion con el hash:",hash);
+                return false;
+            }
+            console.log("en blockchain serviceessss", transaction);
             let index = transaction.index;
-            console.log("en removeBlockByhash", index);
-            let nextBlockIndex = this.getBlockIndex(index+1);
-            if(nextBlockIndex){
-                nextBlockIndex.previousHash = transaction.previousHash;
+            let block = transaction;
+
+            console.log(`Bloque a eliminar encontrado en el índice: ${index}`);
+
+            // Obtener el siguiente bloque si existe
+            let nextBlock = this.blockchain.chain[index + 1];
+            if (nextBlock) {
+                nextBlock.previousHash = block.previousHash;  // Actualizar el previousHash del bloque siguiente
+            } else {
+                console.log("No hay un bloque siguiente que actualizar.");
             }
-            else{
-                console.log("no hay siguiente bloque");
-            }
-            
+
+            // Eliminar el bloque en el índice especificado
             this.blockchain.chain.splice(index, 1);
-            console.log(this.reindexationBlockchain(index));
-            console.log("is valid chain?",this.isValidChain());            
+
+            // Reindexar la blockchain
+            this.reindexationBlockchain(index);
+
+            // Verificar si la blockchain sigue siendo válida
+            if (this.isValidChain()) {
+                console.log("Blockchain válida después de eliminar el bloque.");
+            } else {
+                throw new Error("Error: La blockchain no es válida después de eliminar el bloque.");
+            }
+
             return true;
-        }
-        catch(error){
-            throw new Error(`No se encontró una transacción con el hash: ${hash}`);
+        } catch (error) {
+            console.error(`Error al eliminar el bloque: ${error.message}`);
+            throw error;
         }
     }
+    
 }
 
 module.exports = BlockchainService;

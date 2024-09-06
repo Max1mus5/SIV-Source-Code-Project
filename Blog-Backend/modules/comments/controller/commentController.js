@@ -52,7 +52,8 @@ class CommentController {
                 creationDate: newCommentInstance.date,
                 comment_id: answerComment ? answerComment.id : null
             }, { transaction });
-            post.comments += 1;
+            post.comments = parseInt(post.comments, 10) + 1;
+            await post.save({ transaction });
             await transaction.commit();
             return newComment;
         } catch (error) {

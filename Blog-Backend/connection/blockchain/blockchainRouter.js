@@ -185,7 +185,6 @@ router.put('/update-transaction', (req, res) => {
 //eliminar un bloque
 router.delete('/block/:hash', (req, res) => {
     const { hash } = req.params;
-    console.log("en router delete",hash);
     try {
         const isDeleted = blockchainService.removeBlockByhash(hash);
         if (isDeleted) {
