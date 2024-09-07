@@ -174,7 +174,7 @@ class BlockchainService {
     async removeBlockByhash(hash) {
         try {
             let transaction = await this.getTransactionByHash(hash);
-            console.log("en blockchain serviceessss", transaction);
+            //console.log("en blockchain serviceessss", transaction);
             let index = transaction.index;
             let block = transaction;
 

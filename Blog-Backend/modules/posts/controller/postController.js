@@ -2,7 +2,6 @@ const axios = require('axios');
 const { sequelize } = require('../../../connection/db/database');
 const PostInstance = require('../model/postInstance');
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
-const { Comment } = require('../../../connection/db/schemas/comments-schema/commentSchema');
 const { validateRequiredFields, convertToInt } = require('../utils/utils');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -185,14 +184,17 @@ class PostController {
     }
 
    async deletePost(postId) {
+    const {Comment} = require('../../../connection/db/schemas/comments-schema/commentSchema');
     const transaction = await sequelize.transaction();
     try {
+        // Eliminar los comentarios asociados al post y sus respuestas
+        const fatherComments = await Comment.findAll({ where: { post_id: postId }, transaction });
+        for (const comment of fatherComments) {
+            await Comment.destroy({ where: { comment_id: comment.id }, transaction });
+        }
+        await Comment.destroy({ where: { post_id: postId }, transaction });
         // Obtener el post de la base de datos
         const post = await Posts.findByPk(postId, { transaction });
-
-        //get comments asociatted to the post
-        const comments = await Comment.findAll({ where: { post_id: postId }, transaction });
-
         if (!post) {
             throw new Error('Post no encontrado');
         }
@@ -200,28 +202,19 @@ class PostController {
         const blockchainURL = `${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`;
         const deletedTransaction = await axios.delete(blockchainURL);
 
-        if (deletedTransaction.status == 200) {
-            // Eliminar el post de la base de datos
-            const deletedPost = await Posts.destroy({
-                where: { id: postId },
-                transaction
-            });
-
-            //delete comments and subcomments associated to the post
-            for (let comment of comments) {
-                await Comment.destroy({
-                    where: { id: comment.id },
-                    transaction
-                });
-            }
-
-            await transaction.commit();
-            console.log(`Post eliminado con ID: ${postId}`);
-            return deletedPost;
+        if (deletedTransaction.status !== 200) {
+            throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);
         }
-        else{
-            throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);  
-        }
+        
+        // Eliminar el post de la base de datos
+        const deletedPost = await Posts.destroy({
+            where: { id: postId },
+            transaction
+        });
+
+        await transaction.commit();
+        console.log(`Post eliminado con ID: ${postId}`);
+        return deletedPost;
     } catch (error) {
         await transaction.rollback();
         console.error(`Error al eliminar el post: ${error.message}`);
