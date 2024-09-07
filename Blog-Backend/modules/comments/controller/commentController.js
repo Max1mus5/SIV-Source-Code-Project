@@ -64,8 +64,13 @@ class CommentController {
 
 
     async getComments(post_id) {
-        // Obtener los comentarios asociados a un post
+        try{
+            // Obtener los comentarios asociados a un post
         const comments = await Comment.findAll({ where: { post_id: post_id } });
+
+        if(comments.length === 0) {
+            throw new Error('No se encontraron comentarios');
+        }
     
         // Ordenar los comentarios por fecha de creación en orden descendente
         comments.sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate));
@@ -116,6 +121,10 @@ class CommentController {
         });
     
         return finalResult;
+        }
+        catch (error) {
+            throw error;
+        }
     }
 
     async deleteComment(comment_id) {
