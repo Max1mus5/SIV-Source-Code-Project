@@ -26,6 +26,16 @@ router.get('/get-comments/:post_id', async (req, res) => {
     }
 });
 
+router.delete('/delete-comment/:comment_id', async (req, res) => {
+    const commentController = new CommentController();
+    try {
+        const comment = await commentController.deleteComment(req.params.comment_id);
+        res.status(200).json(comment);
+    } catch (error) {
+        handleErrorResponse(res, error);
+    }
+});
+
 
 
 module.exports = router;

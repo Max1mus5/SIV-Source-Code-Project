@@ -64,37 +64,93 @@ class CommentController {
 
 
     async getComments(post_id) {
-        //obtain comments asosciated to a post
+        // Obtener los comentarios asociados a un post
         const comments = await Comment.findAll({ where: { post_id: post_id } });
-
-        //order comments by creation date
-        comments.sort((a, b) => {
-            return new Date(a.creationDate) - new Date(b.creationDate);
+    
+        // Ordenar los comentarios por fecha de creación en orden descendente
+        comments.sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate));
+    
+        // Crear un mapa para organizar comentarios por su id
+        const commentMap = new Map();
+        comments.forEach(comment => {
+            commentMap.set(comment.id, { ...comment, children: [] });
         });
-
-        //order comments by parent comment
-        const orderedComments = [];
+    
+        // Agrupar los comentarios por su comentario padre
+        const result = [];
         comments.forEach(comment => {
             if (!comment.comment_id) {
-                orderedComments.push(comment);
+                // Comentario padre
+                result.push([commentMap.get(comment.id)]);
+            } else {
+                // Comentario hijo
+                const parentComment = commentMap.get(comment.comment_id);
+                if (parentComment) {
+                    parentComment.children.push(commentMap.get(comment.id));
+                }
             }
         });
-        
-        //order child comments recursively
-        const orderChildComments = (comment) => {
-            const children = comments.filter(child => child.comment_id === comment.id);
-            children.forEach(child => {
-                orderedComments.push(child);
-                orderChildComments(child);
+    
+        // Función recursiva para ordenar los hijos de cada comentario de manera descendente
+        const orderChildComments = (commentGroup) => {
+            commentGroup.forEach(group => {
+                const [parentComment] = group;
+                if (parentComment.children.length > 0) {
+                    parentComment.children.sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate));
+                    parentComment.children.forEach(child => orderChildComments([[child]]));
+                }
             });
         };
-
-        orderedComments.forEach(comment => {
-            orderChildComments(comment);
+    
+        // Ordenar los comentarios hijos recursivamente
+        result.forEach(group => {
+            const [parentComment] = group;
+            orderChildComments([[parentComment]]);
         });
+    
+        // Para cada grupo padre, agregar los hijos en el formato deseado
+        const finalResult = result.map(group => {
+            const [parentComment] = group;
+            const sortedChildren = parentComment.children.map(child => [child]);
+            return [parentComment, ...sortedChildren];
+        });
+    
+        return finalResult;
+    }
 
-        return orderedComments;
-    };
+    async deleteComment(comment_id) {
+        const transaction = await sequelize.transaction();
+        try {
+            // Buscar el comentario a eliminar
+            const comment = await Comment.findOne({ where: { id: comment_id }, transaction });
+            if (!comment) {
+                throw new Error('No se encontró el comentario');
+            }
+
+            const asscoiatedComments = await Comment.findAll({ where: { comment_id: comment.id }, transaction });
+
+            // convert to null
+            asscoiatedComments.forEach(async (comment) => {
+                comment.comment_id = null;
+                await comment.save({ transaction });
+            });
+
+            // Eliminar el comentario
+            await comment.destroy({ transaction });
+
+            // Actualizar el contador de comentarios en el post asociado
+            const post = await Posts.findOne({ where: { id: comment.post_id }, transaction });
+            post.comments = parseInt(post.comments, 10) - 1;
+            await post.save({ transaction });
+
+            await transaction.commit();
+            return comment;
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    }
+
 }
 
 module.exports = CommentController;

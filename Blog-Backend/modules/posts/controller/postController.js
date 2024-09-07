@@ -2,6 +2,7 @@ const axios = require('axios');
 const { sequelize } = require('../../../connection/db/database');
 const PostInstance = require('../model/postInstance');
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
+const { Comment } = require('../../../connection/db/schemas/comments-schema/commentSchema');
 const { validateRequiredFields, convertToInt } = require('../utils/utils');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -188,6 +189,10 @@ class PostController {
     try {
         // Obtener el post de la base de datos
         const post = await Posts.findByPk(postId, { transaction });
+
+        //get comments asociatted to the post
+        const comments = await Comment.findAll({ where: { post_id: postId }, transaction });
+
         if (!post) {
             throw new Error('Post no encontrado');
         }
@@ -204,6 +209,14 @@ class PostController {
             where: { id: postId },
             transaction
         });
+
+        //delete comments and subcomments associated to the post
+        for (let comment of comments) {
+            await Comment.destroy({
+                where: { id: comment.id },
+                transaction
+            });
+        }
 
         await transaction.commit();
         console.log(`Post eliminado con ID: ${postId}`);
