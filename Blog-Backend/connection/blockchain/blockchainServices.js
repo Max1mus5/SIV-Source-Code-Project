@@ -10,20 +10,7 @@ class BlockchainService {
         this.blockchain = new Blockchain();
         this.node = new Node(this.blockchain);
         this.consensus = new Consensus(this.blockchain, this.node);
-        this.transactionMap = new Map(); // Mapa para almacenar transacciones por hash
-        this.blockIndexMap = new Map(); // Mapa para almacenar bloques por índice
-
-        // Llenar los mapas con los datos existentes al inicializar
-        this.blockchain.chain.forEach(block => {
-            this.blockIndexMap.set(block.index, block);
-            if (block.data && Array.isArray(block.data)) {
-                block.data.forEach(transaction => {
-                    if (transaction.hash) {
-                        this.transactionMap.set(transaction.hash, block);
-                    }
-                });
-            }
-        });
+        this.blockIndexMap = new Map(); // Mapa para almacenar transacciones por hash
     }
 
     // Crear una nueva transacción
@@ -31,6 +18,10 @@ class BlockchainService {
         const transaction = new Transaction(author, content, Date.now(), type);
         this.blockchain.pendingTransactions.push(transaction);
         console.log("is validate chain?",this.isValidChain());
+        // Llenar los mapas con los datos existentes al inicializar
+        this.blockchain.chain.forEach(block => {
+            this.blockIndexMap.set(block.hash, block);
+        });
         return transaction;
     }
 
@@ -53,6 +44,7 @@ class BlockchainService {
 
     // Obtener la blockchain completa
     getBlockchain() {
+       // console.log(this.blockIndexMap.get(''));
         return this.blockchain;
     }
 
@@ -78,16 +70,8 @@ class BlockchainService {
 
     async getTransactionByHash(hash) {
         try {
-            const block = await this.transactionMap.get(hash);
-            if (!block) {
-                return new Error(`No se encontró una transacción con el hash: ${hash}`);
-            }
-            //console.log("Bloque encontrado:", block);
-            const transaction = block.data.find(tx => tx.hash === hash);
-            if (!transaction) {
-                throw new Error(`No se encontró una transacción con el hash: ${hash}`);
-            }
-            return transaction;
+            const block = await this.blockIndexMap.get(hash);
+            return block;
         } catch (error) {
             throw new Error(`Error al obtener la transacción: ${error.message}`);
         }
@@ -116,7 +100,7 @@ class BlockchainService {
         // Actualizar los mapas con el nuevo bloque
         this.blockIndexMap.set(newBlock.index, newBlock);
         newBlock.data.forEach(transaction => {
-            this.transactionMap.set(transaction.hash, newBlock);
+            this.blockIndexMap.set(transaction.hash, newBlock);
         });
 
         return newBlock;
@@ -136,7 +120,7 @@ class BlockchainService {
             block.hash = block.calculateHash(); // Recalcular el hash del bloque
 
             // Actualizar el mapa de transacciones
-            this.transactionMap.set(transaction.hash, block);
+            this.blockIndexMap.set(transaction.hash, block);
 
             return transaction;
         } catch (error) {
@@ -156,7 +140,7 @@ class BlockchainService {
                 // Actualizar los mapas
                 this.blockIndexMap.set(currentBlock.index, currentBlock);
                 currentBlock.data.forEach(transaction => {
-                    this.transactionMap.set(transaction.hash, currentBlock);
+                    this.blockIndexMap.set(transaction.hash, currentBlock);
                 });
             }
             previousBlock = currentBlock;
@@ -178,7 +162,7 @@ class BlockchainService {
                 // Actualizar los mapas
                 this.blockIndexMap.set(i, block);
                 block.data.forEach(transaction => {
-                    this.transactionMap.set(transaction.hash, block);
+                    this.blockIndexMap.set(transaction.hash, block);
                 });
             }
             return true;
@@ -190,10 +174,6 @@ class BlockchainService {
     async removeBlockByhash(hash) {
         try {
             let transaction = await this.getTransactionByHash(hash);
-            if (!transaction) {
-                console.log("no se encontro una transaccion con el hash:",hash);
-                return false;
-            }
             console.log("en blockchain serviceessss", transaction);
             let index = transaction.index;
             let block = transaction;
@@ -215,11 +195,11 @@ class BlockchainService {
             this.reindexationBlockchain(index);
 
             // Verificar si la blockchain sigue siendo válida
-            if (this.isValidChain()) {
+           /*  if (this.isValidChain()) {
                 console.log("Blockchain válida después de eliminar el bloque.");
             } else {
                 throw new Error("Error: La blockchain no es válida después de eliminar el bloque.");
-            }
+            } */
 
             return true;
         } catch (error) {

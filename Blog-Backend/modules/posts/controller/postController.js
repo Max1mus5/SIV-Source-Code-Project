@@ -200,27 +200,28 @@ class PostController {
         const blockchainURL = `${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`;
         const deletedTransaction = await axios.delete(blockchainURL);
 
-        if (deletedTransaction.status !== 200) {
-            throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);
-        }
-        
-        // Eliminar el post de la base de datos
-        const deletedPost = await Posts.destroy({
-            where: { id: postId },
-            transaction
-        });
-
-        //delete comments and subcomments associated to the post
-        for (let comment of comments) {
-            await Comment.destroy({
-                where: { id: comment.id },
+        if (deletedTransaction.status == 200) {
+            // Eliminar el post de la base de datos
+            const deletedPost = await Posts.destroy({
+                where: { id: postId },
                 transaction
             });
-        }
 
-        await transaction.commit();
-        console.log(`Post eliminado con ID: ${postId}`);
-        return deletedPost;
+            //delete comments and subcomments associated to the post
+            for (let comment of comments) {
+                await Comment.destroy({
+                    where: { id: comment.id },
+                    transaction
+                });
+            }
+
+            await transaction.commit();
+            console.log(`Post eliminado con ID: ${postId}`);
+            return deletedPost;
+        }
+        else{
+            throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);  
+        }
     } catch (error) {
         await transaction.rollback();
         console.error(`Error al eliminar el post: ${error.message}`);
