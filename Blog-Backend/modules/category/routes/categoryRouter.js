@@ -45,3 +45,15 @@ router.post('/addPostsToCategory', async (req, res) => {
         res.status(500).json({ message: 'Error occured, in adding posts to category' });
     }
 });
+
+router.post('/deletePostsFromCategory', async (req, res) => {
+    const CategoryInstance = new CategoryController();
+    try {
+        const postId = req.body.postId;
+        const categoryId = req.body.categoryId;
+        const deletedPost = await CategoryInstance.deletePostsFromCategory(postId, categoryId);
+        res.status(200).json({ message: 'Post deleted from category', deletedPost });
+    } catch (error) {
+        res.status(500).json({ message: 'Error occured, in deleting posts from category' });
+    }
+});
