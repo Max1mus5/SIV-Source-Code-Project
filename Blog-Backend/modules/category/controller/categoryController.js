@@ -3,6 +3,7 @@ const { Category } = require('../../../connection/db/schemas/category-schema/cat
 const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
 const { Post_Category } = require('../../../connection/db/schemas/category-schema/post_categorySchema');
 const dotenv = require('dotenv');
+const { post } = require('../../comments/routes/commentsRouter');
 dotenv.config();
 
 class CategoryController {
@@ -62,6 +63,31 @@ class CategoryController {
                 categoryId: category.id
             });
             return postCategory;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    async deletePostsFromCategory(postId, categoryId) {
+        try {
+           if (postId === null){
+            const category = await Category.findOne({ where: { id: categoryId } });
+            if (!category) {
+                throw new Error('Category not found');
+            }
+            //eliminar todos los posts asociados a la categoria
+            const postCategory = await Post_Category.destroy({ where: { categoryId: category.id } });
+            return postCategory;
+           }
+           else{
+            //eliminar asociacion especifica
+            const postCategory = await Post_Category.findOne({ where: { postId: postId, categoryId: categoryId } });
+            if (!postCategory) {
+                throw new Error('Post or category not found');
+            }
+            const deletedPost = await Post_Category.destroy({ where: { postId: postId, categoryId: categoryId } });
+            return deletedPost;
+           }
         } catch (error) {
             throw new Error(error.message);
         }
