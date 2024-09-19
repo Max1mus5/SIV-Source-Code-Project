@@ -16,7 +16,24 @@ class CategoryController {
             throw new Error(error.message);
             
         }
-        
+    }
+
+    async getPostsByCategory(categoryName) {
+        try {
+            //obtener nombre de la categoria 
+            const category = await Category.findOne({ where: { name: categoryName } });
+            if (!category) {
+                throw new Error('Category not found');
+            }
+            //buscar el id de la cateogria y retornar los posts asociados
+            const posts = await Post_Category.findAll({ where: { categoryId: category.id } });
+            if (!posts) {
+                throw new Error('No posts found');
+            }
+            return posts;
+        } catch (error) {
+            throw new Error(error.message);
+        }
     }
 }
 

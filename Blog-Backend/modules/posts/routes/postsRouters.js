@@ -36,6 +36,19 @@ router.get('/my-feed', authenticateToken, async (req, res) => {
     }
 });
 
+router.get('/get-list-post', authenticateToken, async (req, res) => {
+    const postController = new PostController();
+    try {
+        const arrayPostId = req.query.arrayPostId;
+        const result = await postController.getArrayPosts(arrayPostId);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        handleErrorResponse(res, error);
+        
+    }
+});
+
 router.put('/update-publication', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
@@ -82,6 +95,14 @@ router.get('/docs', (req, res) => {
             method: 'GET',
             params: {},
             returns: 'All posts'
+        },
+        "/get-list-post": {
+            description: 'Get selected posts by ID provided by a category name query',
+            method: 'GET',
+            params: {
+                arrayPostId: 'String'
+            },
+            returns: 'The selected posts'
         },
         "/update-publication": {
             description: 'Update a publication',

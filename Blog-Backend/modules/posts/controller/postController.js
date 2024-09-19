@@ -117,6 +117,16 @@ class PostController {
         }
     }
 
+    async getArrayPosts(arrayPostId) {
+        try {
+            const posts = await Posts.findAll({ where: { id: arrayPostId } });
+            return posts;
+        } catch (error) {
+            console.error(`Error al obtener los posts: ${error.message}`);
+            throw error;
+        }
+    }
+
     async updatePost(postData) {
         const transaction = await sequelize.transaction();
         let blockIndex; 
