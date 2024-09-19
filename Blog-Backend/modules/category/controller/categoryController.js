@@ -1,5 +1,4 @@
 const { sequelize } = require('../../../connection/db/database');
-const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
 const { Category } = require('../../../connection/db/schemas/category-schema/categorySchema');
 const { Post_Category } = require('../../../connection/db/schemas/category-schema/post_categorySchema');
 const dotenv = require('dotenv');
@@ -31,6 +30,17 @@ class CategoryController {
                 throw new Error('No posts found');
             }
             return posts;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    async createCategory(category) {
+        try {
+            const newCategory = await Category.create({
+                name: category.name
+            });
+            return newCategory;
         } catch (error) {
             throw new Error(error.message);
         }

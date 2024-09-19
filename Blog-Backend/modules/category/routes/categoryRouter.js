@@ -24,13 +24,12 @@ router.get('/getPostsByCategory/:categoryName', async (req, res) => {
     }
 });
 
-router.get('/getPostsByCategory/:page', async (req, res) => {
+router.post('/createCategory', async (req, res) => {
+    const CategoryInstance = new CategoryController();
     try {
-        const page = req.params.page;
-        const posts = await Posts.findAll({ where: { category: page } });
-        res.status(200).json(posts);
+        const newCategory = await CategoryInstance.createCategory(req.body);
+        res.status(201).json(newCategory);
     } catch (error) {
-        res.status(500).json({ message: 'Error occured in getPostsByCategory' });
+        res.status(500).json({ message: 'Error occured, in creating category' });
     }
 });
-module.exports = router;
