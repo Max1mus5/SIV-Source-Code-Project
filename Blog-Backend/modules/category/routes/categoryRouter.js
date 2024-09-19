@@ -33,3 +33,15 @@ router.post('/createCategory', async (req, res) => {
         res.status(500).json({ message: 'Error occured, in creating category' });
     }
 });
+
+router.post('/addPostsToCategory', async (req, res) => {
+    const CategoryInstance = new CategoryController();
+    try {
+        const postId = req.body.postId;
+        const categoryId = req.body.categoryId;
+        const newPost = await CategoryInstance.addPostsToCategory(postId, categoryId);
+        res.status(201).json({ message: 'Post added to category', newPost });
+    } catch (error) {
+        res.status(500).json({ message: 'Error occured, in adding posts to category' });
+    }
+});
