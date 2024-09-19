@@ -13,6 +13,16 @@ router.get('/getCategory', async (req, res) => {
     }
 });
 
+router.get('/searchCategory', async (req, res) => {
+    const CategoryInstance = new CategoryController();
+    try {
+        const category = await CategoryInstance.searchCategory(req.query.categoryName);
+        res.status(200).json(category);
+    } catch (error) {
+        res.status(500).json({ message: 'Category not found' });
+    }
+});
+
 
 router.get('/getPostsByCategory/:categoryName', async (req, res) => {
     const CategoryInstance = new CategoryController();
