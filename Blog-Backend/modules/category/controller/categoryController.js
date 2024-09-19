@@ -19,6 +19,18 @@ class CategoryController {
         }
     }
 
+    async searchCategory(letters) {
+        try {
+            const categories = await Category.findAll();
+            const matchingCategories = categories.filter(category => 
+                category.name.toLowerCase().includes(letters.toLowerCase())
+            );
+            return matchingCategories;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
     async getPostsByCategory(categoryName) {
         try {
             //obtener nombre de la categoria 
