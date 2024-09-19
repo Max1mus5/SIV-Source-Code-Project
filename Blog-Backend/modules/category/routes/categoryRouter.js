@@ -80,3 +80,63 @@ router.delete('/deleteCategory', async (req, res) => {
     }
 });
 
+router.get('/docs', (req, res) => {
+    res.json({
+        "/getCategory": {
+            description: 'Get all categories',
+            method: 'GET',
+            params: {},
+            returns: 'All categories'
+        },
+        "/getPostsByCategory/:categoryName": {
+            description: 'Get posts by category name',
+            method: 'GET',
+            params: {
+                categoryName: 'String'
+            },
+            returns: 'The posts'
+        },
+        "/createCategory": {
+            description: 'Create a new category',
+            method: 'POST',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The newly created category'
+        },
+        "/addPostsToCategory": {
+            description: 'Add a post to a category',
+            method: 'POST',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The newly added post'
+        },
+        "/deletePostsFromCategory": {
+            description: 'Delete a post from a category',
+            method: 'DELETE',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The deleted post'
+        },
+        "/deleteCategory": {
+            description: 'Delete a category',
+            method: 'DELETE',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The deleted category'
+        },
+        "/searchCategory": {
+            description: 'Search for a category',
+            method: 'GET',
+            params: {
+                categoryName: 'String'
+            },
+            returns: 'The category'
+        },
+        
+    });
+});
+

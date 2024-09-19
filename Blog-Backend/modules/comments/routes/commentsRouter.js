@@ -36,6 +36,36 @@ router.delete('/delete-comment/:comment_id', async (req, res) => {
     }
 });
 
+router.get('/docs', (req, res) => {
+    res.json({
+        "/create-comment": {
+            description: 'Create a new comment',
+            method: 'POST',
+            params: {
+                body: 'Object'
+            },
+            returns: 'The newly created comment'
+        },
+        "/get-comments/:post_id": {
+            description: 'Get comments by post id',
+            method: 'GET',
+            params: {
+                post_id: 'String'
+            },
+            returns: 'The comments'
+        },
+        "/delete-comment/:comment_id": {
+            description: 'Delete a comment by id',
+            method: 'DELETE',
+            params: {
+                comment_id: 'String'
+            },
+            returns: 'The deleted comment'
+        },
+        
+    });
+});
+
 
 
 module.exports = router;
