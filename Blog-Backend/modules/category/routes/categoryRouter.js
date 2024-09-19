@@ -80,6 +80,7 @@ router.delete('/deleteCategory', async (req, res) => {
     }
 });
 
+//#region Documentation
 router.get('/docs', (req, res) => {
     res.json({
         "/getCategory": {

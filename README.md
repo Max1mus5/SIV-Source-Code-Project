@@ -59,6 +59,9 @@ Se implemento una API RESTful para el backend, con las siguientes rutas:
 ### `/user`
 ### `/reset`
 ### `/post`
+### `/comment`
+### `/blockchain`
+### `/category`
 
 
 ## Middleware
@@ -102,6 +105,12 @@ authorization: Bearer <token>
 4. **Iniciar el servidor con nodemon**:
     ```bash
     npm run dev
+    ```
+
+5. **Verificar Estado del servidor y de la Blockchain**:
+    ```plaintext
+    http://localhost:8545/blockchain/status
+    http://localhost:8000/status
     ```
 
 ## Licencia

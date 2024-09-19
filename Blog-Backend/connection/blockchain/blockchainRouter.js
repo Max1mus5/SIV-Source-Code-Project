@@ -4,7 +4,7 @@ const blockchainService = require('./blockchainInstance');
 const dotenv = require('dotenv');
 dotenv.config();
 
-//ruta de docs
+//#region Docs
 router.get('/docs', (req, res) => {
     res.json({
 
@@ -71,7 +71,7 @@ router.get('/docs', (req, res) => {
 });
 
 
-
+//#region Routes
 // Crear una nueva transacción
 router.post('/create-transaction', (req, res) => {
     const { from, content } = req.body;
