@@ -46,7 +46,7 @@ router.post('/addPostsToCategory', async (req, res) => {
     }
 });
 
-router.post('/deletePostsFromCategory', async (req, res) => {
+router.delete('/deletePostsFromCategory', async (req, res) => {
     const CategoryInstance = new CategoryController();
     try {
         const postId = req.body.postId;
@@ -57,3 +57,16 @@ router.post('/deletePostsFromCategory', async (req, res) => {
         res.status(500).json({ message: 'Error occured, in deleting posts from category' });
     }
 });
+
+router.delete('/deleteCategory', async (req, res) => {
+    const CategoryInstance = new CategoryController();
+    try {
+        const postId = null;
+        const categoryId = req.body.categoryId;
+        const deletedCategory = await CategoryInstance.deletePostsFromCategory(postId,categoryId);
+        res.status(200).json({ message: 'Category deleted and all posts associated', deletedCategory });
+    } catch (error) {
+        res.status(500).json({ message: 'Error occured, in deleting category' });
+    }
+});
+
