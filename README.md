@@ -1,6 +1,6 @@
 <h1 align="center"> <img src="./public/SIV.jpeg" /><h1/>
 
-#### Semillero de Videojuegos - Universidad Tecnologica de Pereira
+#### Semillero de Videojuegos - Universidad Tecnologica de Pereira - Blog
 
 ### [Backend](#backend)
 ### [Frontend](#Frontend)
