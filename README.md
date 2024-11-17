@@ -1,6 +1,6 @@
 <h1 align="center"> <img src="./public/SIV.jpeg" /><h1/>
 
-#### Semillero de Videojuegos - Universidad Tecnologica de Pereira - Blog + Blockchain
+#### Semillero de Videojuegos - Universidad Tecnologica de Pereira - Blog🤩 + Blockchain🫠
 
 ### [Backend](#backend)
 ### [Frontend](#Frontend)
