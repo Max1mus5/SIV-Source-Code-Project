@@ -41,7 +41,7 @@ class UserController {
 
             //token for verify account
             let token = generateToken({username:userData.username, email:userData.email}, process.env.JWT_SECRET, 1200 );
-            let tokenExpiration = (Date.now() + 1200).toString(); // 20 minutos
+            let tokenExpiration = new Date(Date.now() + 86400000).toISOString();  // 24 H
             const hashedPassword = await hashPassword(userData.password);
             const role = userData.role && userData.role.trim() !== '' ? userData.role : 'reader';
             const newUser = UserInstance.createUser(// make a new user and return it whit his instances
@@ -71,12 +71,16 @@ class UserController {
                 profileImage: newUser.profileImage || '',
                 favorites: newUser.roleInstance.favorites || [],
                 posts: newUser.roleInstance.posts || [],
+                isVerified: false,
                 validationToken: newUser.validationToken,
                 tokenExpiration: newUser.tokenExpiration
             }, { transaction });
             newUser.id = user.id; // Set the ID of the class instance
 
             await transaction.commit();
+
+            /* eliminar cuenta despues de 24H */
+            this.scheduleAccountDeletion(user.id, tokenExpiration);
 
             
             let info = await sendVerificationEmail(newUser.email, newUser.validationToken);
@@ -86,6 +90,21 @@ class UserController {
             await transaction.rollback();
             throw new Error(error.message);
         }
+    }
+
+    async scheduleAccountDeletion(userId, expirationDate) {
+        const deleteDelay = new Date(expirationDate) - Date.now();
+        setTimeout(async () => {
+            try {
+                const user = await UserSchema.findByPk(userId);
+                if (user && !user.isVerified) {
+                    await user.destroy();
+                    console.log(`Usuario no verificado ${userId} eliminado automáticamente`);
+                }
+            } catch (error) {
+                console.error('Error al eliminar cuenta no verificada:', error);
+            }
+        }, deleteDelay);
     }
 
 
@@ -111,13 +130,35 @@ class UserController {
         }
     }
 
-    async verifyToken(token){
-        const user = await searchByToken(token);
-        console.log(user);
-        let message = `Hola!! ${user.name} tu cuenta ha sido verificada con exito.`;
-        
-        return message;
+    async verifyToken(token) {
+        const transaction = await sequelize.transaction();
+        try {
+            const user = await searchByToken(token);
+            
+            if (!user) {
+                throw new Error('Token no válido.');
+            }
+
+            await UserSchema.update(
+                {
+                    isVerified: true,
+                    validationToken: null,
+                    tokenExpiration: null
+                },
+                {
+                    where: { id: user.id },
+                    transaction
+                }
+            );
+
+            await transaction.commit();
+            return `¡Hola ${user.name}! Tu cuenta ha sido verificada con éxito.`;
+        } catch (error) {
+            await transaction.rollback();
+            throw new Error(error.message);
+        }
     }
+
 
     async updateUser(updateData) {
         const transaction = await sequelize.transaction();

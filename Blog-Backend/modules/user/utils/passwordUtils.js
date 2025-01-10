@@ -3,21 +3,29 @@ const { User } = require('../../../connection/db/schemas/user-schema/userSchema'
 //search by token
 async function searchByToken(token) {
     try {
-        //search by token
-        const user = await User.findOne({ where: { validationToken: token } });
-        if (!user) throw new Error('Token no válido.');
-        let datauser = user.dataValues;
-        if(!Date.now().toString() > datauser.tokenExpiration){
-            await  User.destroy({ where: { name: datauser.name } });
-            throw new Error('Token expirado, cuenta eliminada.');
+        const user = await User.findOne({ 
+            where: { 
+                validationToken: token,
+                isVerified: false 
+            } 
+        });
+
+        if (!user) {
+            throw new Error('Token no válido o cuenta ya verificada.');
         }
-        //actualizar base dee datos y vaciar espacios de token
-        let tokeknNull = await User.update({ validationToken: null, tokenExpiration: null }, { where: { name:datauser.name } });
-        console.log(tokeknNull);
-        return datauser;
+
+        const expirationDate = new Date(user.tokenExpiration);
+        if (Date.now() > expirationDate) {
+            await user.destroy();
+            throw new Error('El token ha expirado y la cuenta ha sido eliminada. Por favor, regístrese nuevamente.');
+        }
+
+        return user;
     } catch (error) {
         throw new Error(error.message);
     }
 }
+
+
 
 module.exports = searchByToken;

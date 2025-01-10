@@ -27,17 +27,32 @@ async function sendPasswordResetEmail(email) {
     }
 }
 
-async function sendVerificationEmail(email,token) {
+async function sendVerificationEmail(email, token) {
     try {
-        // set token in database
-        let text = `Gracias por registrarte en nuestro blog. Por favor, haz clic en el siguiente enlace o pégalo en tu navegador para verificar tu cuenta: ${process.env.BACKEND_URL}/user/verify/${token}`;
-        let info = await emailHelper(email, 'Verificación de cuenta', text);
+        const verificationLink = `${process.env.BACKEND_URL}/user/verify/${token}`;
+        const text = `
+            Gracias por registrarte en nuestro blog.
+            
+            Por favor, verifica tu cuenta haciendo clic en el siguiente enlace:
+            ${verificationLink}
+            
+            IMPORTANTE: Este enlace expirará en 24 horas. Si no verificas tu cuenta dentro de este período,
+            tu cuenta será eliminada automáticamente y necesitarás registrarte nuevamente.
+            
+            Si no creaste esta cuenta, puedes ignorar este correo. 
+
+            Saludos ☺️
+        `;
+
+        let info = await emailHelper(email, 'Verificación de cuenta - Acción requerida', text);
         console.log('Correo de verificación enviado');
-        return info
+        return info;
     } catch (error) {
-        throw new Error(error.message);
+        throw new Error('Error al enviar el correo de verificación: ' + error.message);
     }
 }
+
+
 
 async function passwordSendResetEmail(email, token) {
         let text = `Recibiste este correo porque tú (u otra persona) solicitó el restablecimiento de la contraseña de tu cuenta. Por favor, haz clic en el siguiente enlace o pégalo en tu navegador para completar el proceso dentro de 20 minutos: ${process.env.BACKEND_URL}/reset/${token}`;
