@@ -2,182 +2,290 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('../controller/userController');
 const LoginController = require('../controller/login');
-const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
-const { sendPasswordResetEmail, passwordSendResetEmail } = require('../../../connection/utils/recoverPassword')
+const { authenticateToken, checkRole } = require('../../../connection/middlewares/JWTmiddleware');
+const { sendPasswordResetEmail, passwordSendResetEmail } = require('../../../connection/utils/recoverPassword');
+const { validateRequest } = require('../../../connection/middlewares/validationMiddleware');
+const { rateLimiter } = require('../../../connection/middlewares/rateLimiter');
 
-
-
-// Documentacion de la ruta
+//#region DOCS
 router.get('/docs', (req, res) => {
-  //region Documentation
-  res.json({
-    "/recoverPassword": {
-        description: 'send Email for recover password',
-        method: 'POST',
-        params: {
-            email: 'String'
-        }
-    },
-    "/register": {
-        description: 'Register',
-        method: 'POST',
-        params: {
-            username: 'String',
-            email: 'String',
-            password: 'String',
-            bio: 'String',
-            role: 'String'
+    res.json({
+        version: '1.0',
+        basePath: '/user',
+        authentication: {
+            type: 'Bearer Token',
+            description: 'Se requiere token JWT para rutas protegidas'
         },
-        returns: "user created in database temporaly and send a email for verify account, if dosent verify account in 20 minutes the account will be deleted"
-    },
-
-    "/verify/:token": {
-        DANGER: "only you have 20 minutes to verify the account, if you dont verify the account in 20 minutes the account will be deleted :)",
-        description: 'Route to verify account by email, updates the database and deletes the token',
-        method: 'get',
-        params: {
-            none,
+        endpoints: {
+            auth: {
+                register: {
+                    path: '/register',
+                    method: 'POST',
+                    description: 'Registra un nuevo usuario y envía correo de verificación',
+                    rateLimiting: '5 intentos por hora', 
+                    body: {
+                        username: { type: 'string', required: true, minLength: 3 },
+                        email: { type: 'string', required: true, format: 'email' },
+                        password: { type: 'string', required: true, minLength: 8 },
+                        bio: { type: 'string', required: false },
+                        role: { type: 'string', enum: ['reader', 'author'], default: 'reader' }
+                    },
+                    responses: {
+                        201: { description: 'Usuario creado exitosamente' },
+                        400: { description: 'Error de validación' }
+                    }
+                },
+                verify: {
+                    path: '/verify/:token',
+                    method: 'GET',
+                    description: 'Verifica la cuenta de usuario mediante el token enviado al correo electrónico',
+                    notes: 'El token tiene una validez de 20 minutos.',
+                    params: {
+                        token: { type: 'string', required: true, description: 'Token de verificación' }
+                    },
+                    responses: {
+                        200: { description: 'Cuenta verificada exitosamente' },
+                        400: { description: 'Token inválido o expirado' }
+                    }
+                },
+                login: {
+                    path: '/login',
+                    method: 'POST',
+                    description: 'Inicio de sesión y generación de token',
+                    body: {
+                        username: { type: 'string', required: true },
+                        password: { type: 'string', required: true }
+                    },
+                    responses: {
+                        200: { description: 'Inicio de sesión exitoso', schema: { token: 'string' } }, 
+                        401: { description: 'Credenciales inválidas' }
+                    }
+                }
+            },
+            user: { 
+                get: {
+                    path: '/:username', 
+                    method: 'GET',
+                    description: 'Obtiene la información de un usuario por su nombre de usuario',
+                    security: 'Bearer Token', 
+                    params: {
+                        username: { type: 'string', required: true }
+                    },
+                    responses: {
+                        200: { description: 'Información del usuario' },
+                        404: { description: 'Usuario no encontrado' }
+                    }
+                },
+                update: {
+                    path: '/:username',
+                    method: 'PUT',
+                    description: 'Actualiza la información de un usuario',
+                    security: 'Bearer Token',
+                    params: {
+                        username: { type: 'string', required: true }
+                    },
+                    body: {
+                        username: { type: 'string', required: false, minLength: 3 },
+                        email: { type: 'string', required: false, format: 'email' },
+                        password: { type: 'string', required: false, minLength: 8 },
+                        bio: { type: 'string', required: false },
+                        role: { type: 'string', enum: ['reader', 'author'], required: false }
+                    },
+                    responses: {
+                        200: { description: 'Usuario actualizado exitosamente' },
+                        400: { description: 'Error de validación' }
+                    }
+                },
+                delete: {
+                    path: '/deleteUser', 
+                    method: 'DELETE',
+                    description: 'Elimina un usuario por su ID',
+                    security: 'Bearer Token',
+                    params: {
+                        id: { type: 'string', required: true, description: 'ID del usuario' } 
+                    },
+                    responses: {
+                        200: { description: 'Usuario eliminado exitosamente' },
+                        404: { description: 'Usuario no encontrado' }
+                    }
+                }
+            }
         }
-    },
-    "/login": {
-        description: 'Login and token generation',
-        method: 'POST',
-        params: {
-            username: 'String',
-            password: 'String'
-        },
-        returns: "access Token"
-    },
-    "/username": {
-        description: 'Get user by username',
-        method: 'GET',
-        params: {
-            username: 'String'
-        },
-        Headers:{
-            depends: True,
-            key: "token",
-            value: "token"
-        }
-    },
-    "/:username": {
-        description: 'Update user',
-        method: 'PUT',
-        optional_params: {
-            username: 'String',
-            email: 'String',
-            password: 'String',
-            bio: 'String',
-            role: 'String'
-        },
-        Headers:{
-            depends: True,
-            key: "token",
-            value: "token"
-        }
-    },
-    "/deleteUser": {
-        description: 'Delete user by username',
-        method: 'DELETE',
-        params: {
-            id: 'String'
-        }
-              },
-        Headers:{
-            depends: True,
-            key: "token",
-            value: "token"
-        }
-          });
+    });
 });
 
-// #region Routes
+//#region ROUTES
 
-// verify account by email
-router.get("/verify/:token", async (req, res) => {
-    try {
-      message = await UserController.verifyToken(req.params.token);
-      res.status(200).json(`${message} Ya Puedes Cerrar Esta Pestaña`);
-    } catch (error) {
-      res.status(500).send("Error verifying email");
+// middleware de validación para el registro
+const registerValidation = validateRequest({
+    username: { type: 'string', required: true, minLength: 3 },
+    email: { type: 'string', required: true, format: 'email' },
+    password: { type: 'string', required: true, minLength: 8 },
+    bio: { type: 'string', required: false },
+    role: { type: 'string', enum: ['reader', 'author'], default: 'reader' }
+});
+
+// registro con rate limiting y validación
+router.post('/register',
+    rateLimiter({ windowMs: 60 * 60 * 1000, max: 5 }), // 5 intentos por hora
+    registerValidation,
+    async (req, res) => {
+        try {
+            const user = await UserController.createUser(req.body);
+            res.status(201).json({
+                status: 'success',
+                message: 'Se ha enviado un correo de verificación a su email',
+                data: {
+                    userId: user.id,
+                    email: user.email,
+                    verificationDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                }
+            });
+        } catch (error) {
+            res.status(400).json({
+                status: 'error',
+                error: error.message,
+                code: error.code || 'REGISTRATION_ERROR'
+            });
+        }
     }
-  }); 
-
-// recover password
-router.post("/recoverPassword", async (req, res) => {
-    try {
-      const  email = req.body.email;
-      let data = await sendPasswordResetEmail(email);
-       //actualizar en base de datos
-      let dataUpdated = await UserController.updateUser(data);
-      console.log('Token actualizado en la base de datos:', dataUpdated);
-
-      let info = await passwordSendResetEmail(email, data.validationToken);
-      console.log(info);
-      res.status(200).send(`Recover password link sended to Email sent: ${info.response}`);
-    } catch (error) {
-      res.status(500).json({"Error sending email":error.message});
-    }
-  }
 );
 
-// Crear usuario
-router.post('/register', async (req, res) => {
-    try {
-        const user = await UserController.createUser(req.body);
-        res.status(201,user).json('Se ha enviado un correo de verificacion a su email');
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// Iniciar sesion
-router.post('/login', async (req, res) => {
-    try {
-        const token = await LoginController.login(req, res);
-        if  (token) {
-            res.status(200).json({token: token});
+// Ruta de verificación
+router.get('/verify/:token',
+    rateLimiter({ windowMs: 60 * 60 * 1000, max: 10 }), // 10 verificaciones por hora
+    async (req, res) => {
+        try {
+            const result = await UserController.verifyToken(req.params.token);
+            res.status(200).json({
+                status: 'success',
+                message: result,
+                redirectUrl: `${process.env.FRONTEND_URL}/login`
+            });
+        } catch (error) {
+            res.status(400).json({
+                status: 'error',
+                error: error.message,
+                code: error.code || 'VERIFICATION_ERROR'
+            });
         }
-        else {
-            res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
+    }
+);
+
+// Ruta de login 
+router.post('/login',
+    rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }), // 5 intentos por 15 minutos
+    validateRequest({
+        username: { type: 'string', required: true },
+        password: { type: 'string', required: true }
+    }),
+    async (req, res) => {
+        try {
+            const { token, user } = await LoginController.login(req, res);
+            
+            if (!user.isVerified) {
+                return res.status(403).json({
+                    status: 'error',
+                    code: 'ACCOUNT_NOT_VERIFIED',
+                    message: 'Por favor verifique su cuenta mediante el enlace enviado a su correo'
+                });
+            }
+
+            res.status(200).json({
+                status: 'success',
+                data: {
+                    token,
+                    user: {
+                        id: user.id,
+                        username: user.username,
+                        role: user.role
+                    }
+                }
+            });
+        } catch (error) {
+            res.status(401).json({
+                status: 'error',
+                error: error.message,
+                code: 'AUTHENTICATION_ERROR'
+            });
         }
-    } catch (token) {
-        res.status(400).json({ error: token });
     }
-});
+);
 
-// Obtener usuario por username
-router.get('/:username', authenticateToken, async (req, res) => {
-    try {
-        const user = await UserController.findUserByUsername(req.params.username);
-        if (user) {
-            res.status(200).json(user);
-        } else {
-            res.status(404).json({ message: 'Usuario no encontrado' });
-        }   
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+// Ruta de recuperación de contraseña
+router.post('/recover-password',
+    rateLimiter({ windowMs: 60 * 60 * 1000, max: 3 }), // 3 intentos por hora
+    validateRequest({
+        email: { type: 'string', required: true, format: 'email' }
+    }),
+    async (req, res) => {
+        try {
+            const { email } = req.body;
+            const data = await sendPasswordResetEmail(email);
+            await UserController.updateUser(data);
+            await passwordSendResetEmail(email, data.validationToken);
 
-// Actualizar usuario
-router.put('/updateUser', authenticateToken, async (req, res) => {
-    try {
-        const user = await UserController.updateUser(req.body);
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+            res.status(200).json({
+                status: 'success',
+                message: 'Se ha enviado un enlace de recuperación a su correo',
+                expiresIn: '20 minutos'
+            });
+        } catch (error) {
+            res.status(400).json({
+                status: 'error',
+                error: error.message,
+                code: 'PASSWORD_RESET_ERROR'
+            });
+        }
     }
-});
+);
 
-// Eliminar usuario
-router.delete('/delete/:username', authenticateToken, async (req, res) => {
-    try {
-        await UserController.deleteUser(req.params.username);
-        res.status(200).json({ message: 'Usuario eliminado correctamente' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+// Ruta protegida para actualizar perfil
+router.put('/profile',
+    authenticateToken,
+    validateRequest({
+        username: { type: 'string', required: false, minLength: 3 },
+        email: { type: 'string', required: false, format: 'email' },
+        bio: { type: 'string', required: false }
+    }),
+    async (req, res) => {
+        try {
+            const user = await UserController.updateUser({
+                ...req.body,
+                userId: req.user.id
+            });
+            res.status(200).json({
+                status: 'success',
+                data: user
+            });
+        } catch (error) {
+            res.status(400).json({
+                status: 'error',
+                error: error.message,
+                code: 'UPDATE_ERROR'
+            });
+        }
     }
-});
+);
+
+// Ruta protegida para eliminar cuenta
+router.delete('/account',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            await UserController.deleteUser(req.user.id);
+            res.status(200).json({
+                status: 'success',
+                message: 'Cuenta eliminada exitosamente'
+            });
+        } catch (error) {
+            res.status(400).json({
+                status: 'error',
+                error: error.message,
+                code: 'DELETE_ERROR'
+            });
+        }
+    }
+);
 
 module.exports = router;
