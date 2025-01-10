@@ -1,6 +1,6 @@
 <h1 align="center"> <img src="./public/SIV.jpeg" /><h1/>
 
-#### Semillero de Videojuegos - Universidad Tecnologica de Pereira
+#### Semillero de Videojuegos - Universidad Tecnologica de Pereira - Blog🤩 + Blockchain🫠
 
 ### [Backend](#backend)
 ### [Frontend](#Frontend)
@@ -66,12 +66,12 @@ Se implemento una API RESTful para el backend, con las siguientes rutas:
 
 ## Middleware
 
-Se implementaron los siguientes middlewares para la autenticación de usuarios y envio de correos electronicos para recuperear contraseña:
+Se implementaron los siguientes middlewares para la autenticación de usuarios y envio de correos electronicos para recuperar contraseña:
 > **JWTmiddleware** verifica si el token enviado por el cliente es válido y si el usuario tiene permisos para acceder a la ruta solicitada., debe ser enviaod en el siguiente formato:
 ```plaintext
 authorization: Bearer <token>
 ```
-> **emailHelper** verifica si el correo electronico enviado por el cliente es valido y permite crear una nueva contraseña de ser asi.
+> **emailHelper** verifica si el correo electronico enviado por el cliente es valido y permite crear una nueva contraseña de ser asi
 
 
 
@@ -115,5 +115,5 @@ authorization: Bearer <token>
 
 ## Licencia
 
-Este proyecto está licenciado,  [License](./LICENSE.md).
+Este proyecto está licenciado,  [License](./LICENSE.md)
 
