@@ -216,9 +216,9 @@ router.post('/login',
 // Ruta de recuperación de contraseña
 router.post('/recover-password',
     rateLimiter({ windowMs: 60 * 60 * 1000, max: 3 }), // 3 intentos por hora
-    validateRequest({
-        email: { type: 'string', required: true, format: 'email' }
-    }),
+    validateRequest(Joi.object({
+        email: Joi.string().email().required()
+    })),
     async (req, res) => {
         try {
             const { email } = req.body;
@@ -244,11 +244,11 @@ router.post('/recover-password',
 // Ruta protegida para actualizar perfil
 router.put('/profile',
     authenticateToken,
-    validateRequest({
-        username: { type: 'string', required: false, minLength: 3 },
-        email: { type: 'string', required: false, format: 'email' },
-        bio: { type: 'string', required: false }
-    }),
+    validateRequest(Joi.object({
+        username: Joi.string().min(3).optional(),
+        email: Joi.string().email().optional(),
+        bio: Joi.string().optional()
+    })),
     async (req, res) => {
         try {
             const user = await UserController.updateUser({
