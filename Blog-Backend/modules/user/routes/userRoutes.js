@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Joi = require('joi');
 const UserController = require('../controller/userController');
 const LoginController = require('../controller/login');
 const { authenticateToken, checkRole } = require('../../../connection/middlewares/JWTmiddleware');
@@ -175,10 +176,10 @@ router.get('/verify/:token',
 // Ruta de login 
 router.post('/login',
     rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }), // 5 intentos por 15 minutos
-    validateRequest({
-        username: { type: 'string', required: true },
-        password: { type: 'string', required: true }
-    }),
+    validateRequest(Joi.object({ // Define el esquema de validación con Joi
+        username: Joi.string().required(),
+        password: Joi.string().required()
+    })),
     async (req, res) => {
         try {
             const { token, user } = await LoginController.login(req, res);
