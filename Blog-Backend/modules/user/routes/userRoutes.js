@@ -268,7 +268,7 @@ router.get('/:username', authenticateToken, async (req, res) => {
 });
 
 // Ruta protegida para actualizar perfil
-router.put('/profile',
+router.put('/profile/:username',
     authenticateToken,
     validateRequest(Joi.object({
         username: Joi.string().min(3).optional(),
@@ -277,10 +277,15 @@ router.put('/profile',
     })),
     async (req, res) => {
         try {
-            const user = await UserController.updateUser({
+            const { username } = req.params; // Obtener el nombre de usuario de los parámetros
+
+            // Construir el objeto de actualización con los datos del cuerpo de la solicitud
+            const updateData = {
                 ...req.body,
-                userId: req.user.id
-            });
+                username: username // Asegurarse de que el nombre de usuario sea el correcto
+            };
+
+            const user = await UserController.updateUser(updateData);
             res.status(200).json({
                 status: 'success',
                 data: user
