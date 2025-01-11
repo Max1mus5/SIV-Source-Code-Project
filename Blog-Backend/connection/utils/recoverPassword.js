@@ -8,7 +8,7 @@ async function sendPasswordResetEmail(email) {
         const user = await User.findOne({ where: { email } });
         if (!user) throw new Error('No se encontró el usuario con ese correo electrónico.');
         // crea token aleatorio
-        const token = generateToken({username:user.name, email:user.email}, process.env.JWT_SECRET, 1200 );
+        const token = generateToken({username:user.name, email:user.email}, process.env.JWT_SECRET, 1800 );
         
         // busca email del usuario
         
