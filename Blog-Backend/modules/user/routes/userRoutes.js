@@ -118,13 +118,13 @@ router.get('/docs', (req, res) => {
 //#region ROUTES
 
 // middleware de validación para el registro
-const registerValidation = validateRequest({
-    username: { type: 'string', required: true, minLength: 3 },
-    email: { type: 'string', required: true, format: 'email' },
-    password: { type: 'string', required: true, minLength: 8 },
-    bio: { type: 'string', required: false },
-    role: { type: 'string', enum: ['reader', 'author'], default: 'reader' }
-});
+const registerValidation = validateRequest(Joi.object({
+    username: Joi.string().required().min(3),
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    bio: Joi.string().optional(),
+    role: Joi.string().valid('reader', 'author').default('reader')
+}));
 
 // registro con rate limiting y validación
 router.post('/register',
@@ -274,7 +274,7 @@ router.delete('/account',
     authenticateToken,
     async (req, res) => {
         try {
-            await UserController.deleteUser(req.user.id);
+            await UserController.deleteUser(req.query.email);
             res.status(200).json({
                 status: 'success',
                 message: 'Cuenta eliminada exitosamente'
