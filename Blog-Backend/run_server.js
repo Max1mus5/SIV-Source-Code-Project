@@ -113,6 +113,7 @@ app.use((req, res) => {
 
 const startServer = async () => {
     try {
+        await sequelize.query('DROP TABLE IF EXISTS `Users_backup`');
         await sequelize.sync({ alter: true });
         app.listen(port, () => {
             console.log(`${process.env.baseURL}:${port}`);
