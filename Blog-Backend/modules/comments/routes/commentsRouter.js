@@ -1,71 +1,125 @@
 const express = require('express');
 const router = express.Router();
 const CommentController = require('../controller/commentController');
-const { handleErrorResponse } = require('../utils/utils');
 const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
 
-//#region Routes
-router.post('/create-comment', async (req, res) => {
+// Ruta para crear un nuevo comentario
+router.post('/', authenticateToken, async (req, res) => { 
     const commentController = new CommentController();
     try {
         const newComment = await commentController.createComment(req.body);
-        res.status(200).json(newComment);
+        res.status(201).json({ 
+            status: 'success',
+            data: newComment 
+        });
     } catch (error) {
-        handleErrorResponse(res, error);
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Error al crear el comentario' 
+        });
     }
 });
 
-
-router.get('/get-comments/:post_id', async (req, res) => {
+// Ruta para obtener los comentarios de una publicación
+router.get('/:post_id', async (req, res) => { 
     const commentController = new CommentController();
     try {
         const comments = await commentController.getComments(req.params.post_id);
-        res.status(200).json(comments);
+        res.status(200).json({ 
+            status: 'success', 
+            data: comments 
+        });
     } catch (error) {
-        handleErrorResponse(res, error);
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Error al obtener los comentarios' 
+        });
     }
 });
 
-router.delete('/delete-comment/:comment_id', async (req, res) => {
+// Ruta para eliminar un comentario
+router.delete('/:comment_id', authenticateToken, async (req, res) => { 
     const commentController = new CommentController();
     try {
-        const comment = await commentController.deleteComment(req.params.comment_id);
-        res.status(200).json(comment);
+        await commentController.deleteComment(req.params.comment_id);
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Comentario eliminado exitosamente' 
+        });
     } catch (error) {
-        handleErrorResponse(res, error);
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Error al eliminar el comentario' 
+        });
     }
 });
 
+// Documentación de la API
 router.get('/docs', (req, res) => {
     res.json({
-        "/create-comment": {
-            description: 'Create a new comment',
-            method: 'POST',
-            params: {
-                body: 'Object'
+        version: '1.0',
+        basePath: '/comments',
+        endpoints: {
+            create: {
+                path: '/',
+                method: 'POST',
+                description: 'Crea un nuevo comentario',
+                security: 'Bearer Token',
+                requestBody: {
+                    content: {
+                        'application/json': {
+                            schema: {
+
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: 'Comentario creado exitosamente' },
+                    500: { description: 'Error al crear el comentario' }
+                }
             },
-            returns: 'The newly created comment'
-        },
-        "/get-comments/:post_id": {
-            description: 'Get comments by post id',
-            method: 'GET',
-            params: {
-                post_id: 'String'
+            get: {
+                path: '/:post_id',
+                method: 'GET',
+                description: 'Obtiene los comentarios de una publicación',
+                parameters: [
+                    {
+                        name: 'post_id',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string'
+                        }
+                    }
+                ],
+                responses: {
+                    200: { description: 'Comentarios obtenidos exitosamente' },
+                    500: { description: 'Error al obtener los comentarios' }
+                }
             },
-            returns: 'The comments'
-        },
-        "/delete-comment/:comment_id": {
-            description: 'Delete a comment by id',
-            method: 'DELETE',
-            params: {
-                comment_id: 'String'
-            },
-            returns: 'The deleted comment'
-        },
-        
+            delete: {
+                path: '/:comment_id',
+                method: 'DELETE',
+                description: 'Elimina un comentario',
+                security: 'Bearer Token',
+                parameters: [
+                    {
+                        name: 'comment_id',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string'
+                        }
+                    }
+                ],
+                responses: {
+                    200: { description: 'Comentario eliminado exitosamente' },
+                    500: { description: 'Error al eliminar el comentario' }
+                }
+            }
+        }
     });
 });
-
-
 
 module.exports = router;
