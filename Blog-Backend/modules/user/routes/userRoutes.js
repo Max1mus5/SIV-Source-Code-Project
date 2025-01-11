@@ -229,7 +229,7 @@ router.post('/recover-password',
             res.status(200).json({
                 status: 'success',
                 message: 'Se ha enviado un enlace de recuperación a su correo',
-                expiresIn: '20 minutos'
+                expiresIn: '30 minutos'
             });
         } catch (error) {
             res.status(400).json({
