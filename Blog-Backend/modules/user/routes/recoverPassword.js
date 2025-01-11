@@ -9,10 +9,14 @@ const PasswordController = require('../controller/passwordController');
 // Ruta para restablecer la contraseña
 router.put('/:token', authenticateToken, async (req, res) => {
     const { newPassword } = req.body;
-    const token = req.params.token
-    if(!PasswordController.verifyExpiration(token)){
-        return res.status(400).json({ error: 'El token ha expirado, solicite de nuevo su contraseña.' });
+    const token = req.params.token;
+
+    const { isValid, message } = await PasswordController.verifyExpiration(token);
+
+    if (!isValid) {
+        return res.status(400).json({ error: message });
     }
+
     try {
         if (!newPassword) {
             return res.status(400).json({ error: 'Nueva contraseña requerida.' });
@@ -25,9 +29,9 @@ router.put('/:token', authenticateToken, async (req, res) => {
         };
 
         let recoverUser = await UserController.updateUser(newUser);
-        res.status(200).json({recoverUser, message: 'Contraseña restablecida exitosamente.'});
+        res.status(200).json({ recoverUser, message: 'Contraseña restablecida exitosamente.' });
     } catch (error) {
-        res.status(400).json({ "No fue posible reestrablecer tu contraseña":error.message });
+        res.status(400).json({ "No fue posible reestablecer tu contraseña": error.message });
     }
 });
 
