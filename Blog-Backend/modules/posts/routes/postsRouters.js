@@ -9,9 +9,15 @@ router.post('/create-new-publication', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
         const newPost = await postController.createPost(req.body);
-        res.status(200).json(newPost);
+        res.status(201).json({ 
+            status: 'success',
+            data: newPost
+        });
     } catch (error) {
-        handleErrorResponse(res, error);
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Error al crear la publicación' 
+        });
     }
 });
 
