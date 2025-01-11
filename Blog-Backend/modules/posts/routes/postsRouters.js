@@ -29,10 +29,16 @@ router.get('/:hash/:autor',  async (req, res) => {
 router.get('/my-feed', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
-        const result = await postController.getAllPosts();
-        res.status(200).json(result);
+        const posts = await postController.getAllPosts(); 
+        res.status(200).json({
+            status: 'success',
+            data: posts
+        });
     } catch (error) {
-        handleErrorResponse(res, error);
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Error al obtener el feed' 
+        });
     }
 });
 
