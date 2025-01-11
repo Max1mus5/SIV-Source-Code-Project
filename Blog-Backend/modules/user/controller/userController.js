@@ -109,7 +109,7 @@ class UserController {
 
 
     // region Find Usernmae
-    async findUserByUsername(name) {
+    async getUserByUsername(name) {
         try {
             const user = await UserSchema.findOne({ where: { name } });
             if (user) {
