@@ -200,10 +200,10 @@ class UserController {
         }
     }
 
-    async deleteUser(userId) {
+    async deleteUser(email) {
         const transaction = await sequelize.transaction();
         try {
-            await UserSchema.destroy({ where: { name: userId }, transaction });
+            await UserSchema.destroy({ where: { email: email }, transaction });
             await transaction.commit();
             return true;
         } catch (error) {
