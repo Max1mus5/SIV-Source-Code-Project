@@ -241,6 +241,32 @@ router.post('/recover-password',
     }
 );
 
+//#region CRUD
+
+router.get('/:username', authenticateToken, async (req, res) => {
+    try {
+        const { username } = req.params;
+        const user = await UserController.getUserByUsername(username);
+
+        if (!user) {
+            return res.status(404).json({ 
+                status: 'error', 
+                message: 'Usuario no encontrado' 
+            });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: user
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Error al obtener el usuario' 
+        });
+    }
+});
+
 // Ruta protegida para actualizar perfil
 router.put('/profile',
     authenticateToken,
