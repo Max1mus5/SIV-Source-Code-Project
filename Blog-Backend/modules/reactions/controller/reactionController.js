@@ -27,7 +27,16 @@ class ReactionController {
     }
   }
 
-
+    async getUserReactions(userId) {
+      try {
+          const reactions = await Reaction.findAll({
+              where: { user_id: userId }
+          });
+          return reactions;
+      } catch (error) {
+          throw error;
+      }
+  }
 
   async createReaction(reactionData) {
     const transaction = await sequelize.transaction();
