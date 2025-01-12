@@ -173,42 +173,85 @@ router.get('/verify/:token',
     }
 );
 
-// Ruta de login 
+//#region Ruta de login 
+// Configuración del rate limiter
+const loginLimiter = rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // 5 intentos
+    message: {
+        status: 'error',
+        code: 'TOO_MANY_REQUESTS',
+        message: 'Demasiados intentos de inicio de sesión. Por favor, intente nuevamente en 15 minutos.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Esquema de validación
+const loginSchema = Joi.object({
+    username: Joi.string()
+        .required()
+        .min(3)
+        .max(30)
+        .messages({
+            'string.empty': 'El nombre de usuario es requerido',
+            'string.min': 'El nombre de usuario debe tener al menos 3 caracteres',
+            'string.max': 'El nombre de usuario no debe exceder los 30 caracteres'
+        }),
+    password: Joi.string()
+        .required()
+        .min(6)
+        .messages({
+            'string.empty': 'La contraseña es requerida',
+            'string.min': 'La contraseña debe tener al menos 6 caracteres'
+        })
+});
+
 router.post('/login',
-    rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }), // 5 intentos por 15 minutos
-    validateRequest(Joi.object({ // Define el esquema de validación con Joi
-        username: Joi.string().required(),
-        password: Joi.string().required()
-    })),
+    loginLimiter,
+    validateRequest(loginSchema),
     async (req, res) => {
         try {
-            const { token, user } = await LoginController.login(req, res);
-            
-            if (!user.isVerified) {
-                return res.status(403).json({
-                    status: 'error',
-                    code: 'ACCOUNT_NOT_VERIFIED',
-                    message: 'Por favor verifique su cuenta mediante el enlace enviado a su correo'
-                });
-            }
+            const { username, password } = req.body;
+            const result = await LoginController.login(username, password);
 
-            res.status(200).json({
+            // Log del inicio de sesión exitoso
+            console.log(`Login exitoso para el usuario: ${username} en ${new Date().toISOString()}`);
+
+            // Configurar headers de seguridad
+            res.set({
+                'Content-Security-Policy': "default-src 'self'",
+                'X-Content-Type-Options': 'nosniff',
+                'X-Frame-Options': 'DENY'
+            });
+
+            return res.status(200).json({
                 status: 'success',
                 data: {
-                    token,
+                    token: result.token,
                     user: {
-                        id: user.id,
-                        username: user.username,
-                        role: user.role
-                    }
+                        id: result.user.id,
+                        username: result.user.name,
+                        email: result.user.email,
+                        role: result.user.role,
+                        profileImage: result.user.profileImage
+                    },
+                    expiresIn: 14400 // 4 horas en segundos
                 }
             });
+
         } catch (error) {
-            res.status(401).json({
+            // Manejar diferentes tipos de errores
+            let errorResponse = {
                 status: 'error',
-                error: error.message,
-                code: 'AUTHENTICATION_ERROR'
-            });
+                code: error.code || 'AUTHENTICATION_ERROR',
+                message: error.message || 'Error de autenticación'
+            };
+
+            // Log del error para debugging
+            console.error('Error en login:', error);
+
+            return res.status(error.status || 500).json(errorResponse);
         }
     }
 );
