@@ -54,6 +54,40 @@ class ReactionController {
     }
   }
 
+  async deleteReaction(reactionId, userId) {
+    const transaction = await sequelize.transaction();
+    try {
+        const reaction = await Reaction.findOne({
+            where: { 
+                id: reactionId,
+                user_id: userId
+            },
+            transaction
+        });
+
+        if (!reaction) {
+            throw new Error('Reacción no encontrada o no autorizada');
+        }
+
+        // Si la reacción era en un post, decrementar el contador
+        if (reaction.post_id) {
+            await Posts.increment('likes', { 
+                by: -1,
+                where: { id: reaction.post_id },
+                transaction 
+            });
+        }
+
+        await reaction.destroy({ transaction });
+        await transaction.commit();
+        return { message: 'Reacción eliminada exitosamente' };
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+}
+
+
 };
 
 module.exports = new ReactionController();
