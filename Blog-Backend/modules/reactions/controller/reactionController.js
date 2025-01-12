@@ -5,6 +5,18 @@ const { sequelize } = require('../../../connection/db/database');
 const { validateRequiredFields } = require('../utils/utils');
 
 class ReactionController {
+  async getReactionsByPost(postId) {
+    try {
+        const reactions = await Reaction.findAll({
+            where: { post_id: postId }
+        });
+        return reactions;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
   async createReaction(reactionData) {
     const transaction = await sequelize.transaction();
     try {
