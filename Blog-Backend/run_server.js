@@ -5,6 +5,7 @@ const resetPasswordRoutes = require('./modules/user/routes/recoverPassword');
 const postRoutes = require('./modules/posts/routes/postsRouters');
 const commentRoutes = require('./modules/comments/routes/commentsRouter');
 const categoryRoutes = require('./modules/category/routes/categoryRouter');
+const reactionRoutes = require('./modules/reactions/routes/reactionRouter');
 const { sequelize } = require('./connection/db/database');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -75,6 +76,11 @@ app.use('/comments', asyncHandler(async (req, res, next) => {
 app.use('/category', asyncHandler(async (req, res, next) => {
     if (!categoryRoutes) throw new Error('Category routes not properly initialized');
     return categoryRoutes(req, res, next);
+}));
+
+app.use('/reaction', asyncHandler(async (req, res, next) => {
+    if (!reactionRoutes) throw new Error('Reaction routes not properly initialized');
+    return reactionRoutes(req, res, next);
 }));
 
 const port = process.env.PORT || 3000;
