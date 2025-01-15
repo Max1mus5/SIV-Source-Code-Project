@@ -122,6 +122,42 @@ class NotificationController {
             throw error;
         }
     }
+
+    async getNotificationById(notificationId, userId) {
+        try {
+            const notification = await Notification.findOne({
+                where: { 
+                    id: notificationId,
+                    userId 
+                },
+                include: [{
+                    model: User,
+                    as: 'sender',
+                    attributes: ['id', 'name', 'profileImage']
+                }],
+                attributes: ['id', 'type', 'content', 'isRead', 'createdAt']
+            });
+    
+            if (!notification) {
+                throw {
+                    status: 404,
+                    message: 'Notificación no encontrada'
+                };
+            }
+    
+            return {
+                status: 200,
+                notification
+            };
+        } catch (error) {
+            throw error.status ? error : {
+                status: 500,
+                message: 'Error al obtener la notificación',
+                error: error.message
+            };
+        }
+    }
+    
 }
 
 module.exports = new NotificationController();
