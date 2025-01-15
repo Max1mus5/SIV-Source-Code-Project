@@ -207,4 +207,30 @@ router.delete('/:id',
     }
 );
 
+router.get('/:id',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const notification = await NotificationController.getNotificationById(req.params.id, req.user.id);
+            
+            if (!notification) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Notificación no encontrada'
+                });
+            }
+
+            res.status(200).json({
+                status: 'success',
+                data: notification
+            });
+        } catch (error) {
+            res.status(500).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+    }
+);
+
 module.exports = router;
