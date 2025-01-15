@@ -158,6 +158,38 @@ class NotificationController {
         }
     }
     
+    async getNotificationByType(userId, type, page = 1, limit = 10) {
+        try {
+            const offset = (page - 1) * limit;
+            
+            const notifications = await Notification.findAndCountAll({
+                where: { userId, type },
+                include: [{
+                    model: User,
+                    as: 'sender',
+                    attributes: ['id', 'name', 'profileImage']
+                }],
+                order: [['createdAt', 'DESC']],
+                limit,
+                offset,
+                attributes: ['id', 'type', 'content', 'isRead', 'createdAt']
+            });
+
+            return {
+                status: 200,
+                notifications: notifications.rows,
+                totalCount: notifications.count,
+                currentPage: page,
+                totalPages: Math.ceil(notifications.count / limit)
+            };
+        } catch (error) {
+            throw {
+                status: 500,
+                message: 'Error al obtener las notificaciones',
+                error: error.message
+            };
+        }
+    }
 }
 
 module.exports = new NotificationController();
