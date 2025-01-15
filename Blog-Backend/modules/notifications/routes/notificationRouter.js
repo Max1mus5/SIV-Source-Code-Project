@@ -233,4 +233,30 @@ router.get('/:id',
     }
 );
 
+router.get('/type/:type',
+    authenticateToken,
+    validateRequest(paginationSchema, 'query'),
+    async (req, res) => {
+        try {
+            const { page, limit } = req.query;
+            const notifications = await NotificationController.getNotificationsByType(
+                req.user.id, 
+                req.params.type,
+                page,
+                limit
+            );
+            
+            res.status(200).json({
+                status: 'success',
+                data: notifications
+            });
+        } catch (error) {
+            res.status(500).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+    }
+);
+
 module.exports = router;
