@@ -6,9 +6,9 @@ const { validateRequiredFields, convertToInt } = require('../utils/utils');
 const dotenv = require('dotenv');
 dotenv.config();
 
-
 const blockchainPort = process.env.BC_PORT || 3001;
 const baseURL = process.env.baseURL;
+
 class PostController {
     async createPost(postData) {
         const transaction = await sequelize.transaction();
@@ -37,12 +37,10 @@ class PostController {
                 autor: newPostInstance.autor,
                 content: newPostInstance.content
             });
-            
-            //console.log(transactionBlockchain.data.transaction);
 
             // Minar el bloque con la transacción del post
             const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
-                minerAddress:  newPostInstance.autor
+                minerAddress: newPostInstance.autor
             });
             blockIndex = newBlock.data.index;
             newPostInstance.hashBlockchain = newBlock.data.block.hash;
@@ -69,6 +67,70 @@ class PostController {
             }
             await transaction.rollback();
             console.error(`Error al crear el post: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async sharePost(postId, userId) {
+        const transaction = await sequelize.transaction();
+        let blockIndex;
+        try {
+            // Obtener el post original
+            const originalPost = await Posts.findByPk(postId);
+            if (!originalPost) {
+                throw new Error('Post original no encontrado');
+            }
+
+            // Crear una nueva instancia del post para compartir
+            const sharedPostInstance = PostInstance.createPost(
+                userId,
+                originalPost.title,
+                originalPost.content,
+                originalPost.post_image,
+                new Date().toISOString(),
+                null,
+                0,
+                0,
+                originalPost.id // Referencia al post original
+            );
+
+            // Crear la transacción en la blockchain para el post compartido
+            const transactionBlockchain = await axios.post(`${baseURL}:${blockchainPort}/blockchain/create-transaction`, {
+                autor: sharedPostInstance.autor,
+                content: sharedPostInstance.content,
+                shared_from: originalPost.hashBlockchain // Referencia al hash del post original
+            });
+
+            // Minar el bloque con la transacción del post compartido
+            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
+                minerAddress: sharedPostInstance.autor
+            });
+            blockIndex = newBlock.data.index;
+            sharedPostInstance.hashBlockchain = newBlock.data.block.hash;
+
+            // Crear el post compartido en la base de datos
+            const sharedPost = await Posts.create({
+                autor_id: sharedPostInstance.autor,
+                date: sharedPostInstance.date,
+                title: sharedPostInstance.title,
+                content: sharedPostInstance.content,
+                post_image: sharedPostInstance.image,
+                likes: sharedPostInstance.likes,
+                comments: sharedPostInstance.comments,
+                hashBlockchain: sharedPostInstance.hashBlockchain,
+                shared_from: postId // Guardar referencia al post original
+            }, { transaction });
+
+            await transaction.commit();
+            console.log(`Post compartido creado con ID: ${sharedPost.id}`);
+            return sharedPost;
+        } catch (error) {
+            if (blockIndex !== undefined) {
+                // Eliminar el bloque en caso de error
+                await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${blockIndex}`);
+            }
+            await transaction.rollback();
+            console.error(`Error al compartir el post: ${error.message}`);
             throw error;
         }
     }
@@ -163,7 +225,6 @@ class PostController {
                 autor: updatedPostInstance.autor,
                 content: updatedPostInstance.content
             });
-            console.log(`${baseURL}:${blockchainPort}/blockchain/update-transaction`,transactionBlockchain.status);
             
             const updatedPost = await Posts.update({
                 autor_id: updatedPostInstance.autor,
@@ -190,50 +251,55 @@ class PostController {
             await transaction.rollback();
             console.error(`Error al actualizar el post: ${error.message}`);
             throw error;
-     }
+        }
     }
 
-   async deletePost(postId) {
-    const {Comment} = require('../../../connection/db/schemas/comments-schema/commentSchema');
-    const transaction = await sequelize.transaction();
-    try {
-        // Eliminar los comentarios asociados al post y sus respuestas
-        const fatherComments = await Comment.findAll({ where: { post_id: postId }, transaction });
-        for (const comment of fatherComments) {
-            await Comment.destroy({ where: { comment_id: comment.id }, transaction });
-        }
-        await Comment.destroy({ where: { post_id: postId }, transaction });
-        // Obtener el post de la base de datos
-        const post = await Posts.findByPk(postId, { transaction });
-        if (!post) {
-            throw new Error('Post no encontrado');
-        }
-        // Eliminar la transacción en la blockchain
-        const blockchainURL = `${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`;
-        const deletedTransaction = await axios.delete(blockchainURL);
+    async deletePost(postId) {
+        const {Comment} = require('../../../connection/db/schemas/comments-schema/commentSchema');
+        const transaction = await sequelize.transaction();
+        try {
+            // Eliminar los comentarios asociados al post y sus respuestas
+            const fatherComments = await Comment.findAll({ where: { post_id: postId }, transaction });
+            for (const comment of fatherComments) {
+                await Comment.destroy({ where: { comment_id: comment.id }, transaction });
+            }
+            await Comment.destroy({ where: { post_id: postId }, transaction });
 
-        if (deletedTransaction.status !== 200) {
-            throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);
-        }
-        
-        // Eliminar el post de la base de datos
-        const deletedPost = await Posts.destroy({
-            where: { id: postId },
-            transaction
-        });
+            // Obtener el post original y los posts compartidos
+            const post = await Posts.findByPk(postId, { transaction });
+            if (!post) {
+                throw new Error('Post no encontrado');
+            }
 
-        await transaction.commit();
-        console.log(`Post eliminado con ID: ${postId}`);
-        return deletedPost;
-    } catch (error) {
-        await transaction.rollback();
-        console.error(`Error al eliminar el post: ${error.message}`);
-        throw error;
+            // Eliminar también los posts que fueron compartidos desde este post
+            await Posts.destroy({
+                where: { shared_from: postId },
+                transaction
+            });
+
+            // Eliminar la transacción en la blockchain
+            const blockchainURL = `${baseURL}:${blockchainPort}/blockchain/block/${post.hashBlockchain}`;
+            const deletedTransaction = await axios.delete(blockchainURL);
+
+            if (deletedTransaction.status !== 200) {
+                throw new Error(`Error eliminando el bloque en la blockchain: ${deletedTransaction.status}`);
+            }
+            
+            // Eliminar el post de la base de datos
+            const deletedPost = await Posts.destroy({
+                where: { id: postId },
+                transaction
+            });
+
+            await transaction.commit();
+            console.log(`Post eliminado con ID: ${postId}`);
+            return deletedPost;
+        } catch (error) {
+            await transaction.rollback();
+            console.error(`Error al eliminar el post: ${error.message}`);
+            throw error;
+        }
     }
-}
-
-    
-
 }
 
 module.exports = PostController;
