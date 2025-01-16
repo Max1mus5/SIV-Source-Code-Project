@@ -57,7 +57,22 @@ router.get('/get-list-post', authenticateToken, async (req, res) => {
     }
     catch (error) {
         handleErrorResponse(res, error);
-        
+    }
+});
+
+router.post('/share-post/:postId', authenticateToken, async (req, res) => {
+    const postController = new PostController();
+    try {
+        const { postId } = req.params;
+        const userId = req.body.userId;
+        const result = await postController.sharePost(postId, userId);
+        res.status(200).json({
+            status: 'success',
+            data: result,
+            message: 'Post compartido exitosamente'
+        });
+    } catch (error) {
+        handleErrorResponse(res, error, 400);
     }
 });
 
@@ -116,6 +131,15 @@ router.get('/docs', (req, res) => {
             },
             returns: 'The selected posts'
         },
+        "/share-post/:postId": {
+            description: 'Share an existing post',
+            method: 'POST',
+            params: {
+                postId: 'String',
+                userId: 'String (in body)'
+            },
+            returns: 'The shared post'
+        },
         "/update-publication": {
             description: 'Update a publication',
             method: 'PUT',
@@ -131,14 +155,8 @@ router.get('/docs', (req, res) => {
                 postid: 'String'
             },
             returns: 'The deleted post'
-        },
-        
+        }
     });
-
-
-
 });
-
-
 
 module.exports = router;
