@@ -7,18 +7,27 @@ const { uploadPostImage } = require('../../../connection/middlewares/uploadMiddl
 const path = require('path');
 
 //#region Routes
-// Ruta para subir imagen de un post existente
+// Ruta para subir imagen de un post existente (actualiza solo el campo post_image, sin tocar blockchain)
 router.put('/upload-image/:postId', authenticateToken, uploadPostImage, async (req, res) => {
-    const postController = new PostController();
+    const { Posts } = require('../../../connection/db/schemas/posts-schema/postSchema');
     try {
         if (!req.file) {
             return res.status(400).json({ status: 'error', message: 'No se proporcionó ninguna imagen' });
         }
+        const postId = req.params.postId;
         const imageUrl = `/uploads/posts/${req.file.filename}`;
-        const updated = await postController.updatePost({
-            id: req.params.postId,
-            post_image: imageUrl
-        });
+
+        const post = await Posts.findByPk(postId);
+        if (!post) {
+            return res.status(404).json({ status: 'error', message: 'Post no encontrado' });
+        }
+        // Solo usuarios admin o el propio autor pueden cambiar la imagen
+        if (post.autor_id !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ status: 'error', message: 'Sin permisos para modificar este post' });
+        }
+
+        await Posts.update({ post_image: imageUrl }, { where: { id: postId } });
+
         res.status(200).json({
             status: 'success',
             message: 'Imagen del post actualizada',

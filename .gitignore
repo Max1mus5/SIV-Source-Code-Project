@@ -221,3 +221,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/node,react,windows,dotenv,git,visualstudiocode,astro
+
+*/Blog-Backend/start-dev.ps1

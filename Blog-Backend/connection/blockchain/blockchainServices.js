@@ -87,9 +87,12 @@ class BlockchainService {
         return newBlock;
     }
 
-    updateTransaction(originalHash, autor, content) {
+    async updateTransaction(originalHash, autor, content) {
         try {
-            let block = this.getTransactionByHash(originalHash);
+            let block = await this.getTransactionByHash(originalHash);
+            if (!block) {
+                throw new Error(`No se encontró un bloque con el hash: ${originalHash}`);
+            }
             let transaction = block.data.find(t => t.hash === originalHash);
             if (!transaction) {
                 throw new Error(`No se encontró una transacción con el hash: ${originalHash}`);
@@ -106,6 +109,22 @@ class BlockchainService {
             return transaction;
         } catch (error) {
             throw new Error(`Error al actualizar la transacción: ${error.message}`);
+        }
+    }
+
+    removeBlockByIndex(index) {
+        try {
+            if (index < 0 || index >= this.blockchain.chain.length) {
+                throw new Error(`Índice de bloque fuera de rango: ${index}`);
+            }
+            // No se puede eliminar el bloque génesis (index 0)
+            if (index === 0) {
+                throw new Error('No se puede eliminar el bloque génesis.');
+            }
+            const block = this.blockchain.chain[index];
+            return this.removeBlockByhash(block.hash);
+        } catch (error) {
+            throw new Error(`Error al eliminar bloque por índice: ${error.message}`);
         }
     }
 
