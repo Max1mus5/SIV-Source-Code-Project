@@ -4,6 +4,7 @@
 
 ### [Backend](#backend)
 ### [Frontend](#Frontend)
+### [📋 Notas de Desarrollo (Backend)](./Blog-Backend/README.md)
 
 Este proyecto es un blog diseñado para registrar el progreso de un semillero de investigación, utilizando tecnología blockchain para asegurar la inmutabilidad y autenticidad de los posts.
 
@@ -112,6 +113,17 @@ authorization: Bearer <token>
     http://localhost:8545/blockchain/status
     http://localhost:8000/status
     ```
+
+## Notas de Desarrollo
+
+Para información técnica detallada sobre el backend — incluyendo:
+- ⚠️ Problema crítico con Node.js v21+ y la solución
+- Variables de entorno explicadas
+- Estado actual de módulos y cambios recientes
+- Endpoints disponibles con sus rutas de documentación
+- Notas de seguridad para producción
+
+Consultar: **[Blog-Backend/README.md](./Blog-Backend/README.md)**
 
 ## Licencia
 

@@ -7,6 +7,7 @@ const { authenticateToken, checkRole } = require('../../../connection/middleware
 const { sendPasswordResetEmail, passwordSendResetEmail } = require('../../../connection/utils/recoverPassword');
 const { validateRequest } = require('../../../connection/middlewares/validationMiddleware');
 const { rateLimiter } = require('../../../connection/middlewares/rateLimiter');
+const { uploadProfileImage } = require('../../../connection/middlewares/uploadMiddleware');
 
 //#region DOCS
 router.get('/docs', (req, res) => {
@@ -338,6 +339,36 @@ router.put('/profile/:username',
                 status: 'error',
                 error: error.message,
                 code: 'UPDATE_ERROR'
+            });
+        }
+    }
+);
+
+// Ruta protegida para subir imagen de perfil
+router.put('/profile-image/:username',
+    authenticateToken,
+    uploadProfileImage,
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'No se proporcionó ninguna imagen'
+                });
+            }
+            const { username } = req.params;
+            const imageUrl = `/uploads/profiles/${req.file.filename}`;
+            const updated = await UserController.updateUser({ username, profileImage: imageUrl });
+            res.status(200).json({
+                status: 'success',
+                message: 'Imagen de perfil actualizada',
+                data: { profileImage: imageUrl }
+            });
+        } catch (error) {
+            res.status(400).json({
+                status: 'error',
+                error: error.message,
+                code: 'UPLOAD_ERROR'
             });
         }
     }

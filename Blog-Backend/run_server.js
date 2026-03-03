@@ -1,15 +1,20 @@
 const express = require('express');
 const app = express();
+const path = require('path');
 const userRoutes = require('./modules/user/routes/userRoutes');
 const resetPasswordRoutes = require('./modules/user/routes/recoverPassword');
 const postRoutes = require('./modules/posts/routes/postsRouters');
 const commentRoutes = require('./modules/comments/routes/commentsRouter');
 const categoryRoutes = require('./modules/category/routes/categoryRouter');
 const reactionRoutes = require('./modules/reactions/routes/reactionRouter');
+const notificationRoutes = require('./modules/notifications/routes/notificationRouter');
 const { sequelize } = require('./connection/db/database');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
+
+// Servir archivos estáticos (imágenes subidas)
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Middleware para logging de solicitudes
 app.use((req, res, next) => {
@@ -81,6 +86,11 @@ app.use('/category', asyncHandler(async (req, res, next) => {
 app.use('/reaction', asyncHandler(async (req, res, next) => {
     if (!reactionRoutes) throw new Error('Reaction routes not properly initialized');
     return reactionRoutes(req, res, next);
+}));
+
+app.use('/notifications', asyncHandler(async (req, res, next) => {
+    if (!notificationRoutes) throw new Error('Notification routes not properly initialized');
+    return notificationRoutes(req, res, next);
 }));
 
 const port = process.env.PORT || 3000;

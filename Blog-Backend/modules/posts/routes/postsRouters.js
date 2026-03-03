@@ -3,8 +3,32 @@ const router = express.Router();
 const PostController = require('../controller/postController');
 const { handleErrorResponse } = require('../utils/utils');
 const { authenticateToken } = require('../../../connection/middlewares/JWTmiddleware');
+const { uploadPostImage } = require('../../../connection/middlewares/uploadMiddleware');
+const path = require('path');
 
 //#region Routes
+// Ruta para subir imagen de un post existente
+router.put('/upload-image/:postId', authenticateToken, uploadPostImage, async (req, res) => {
+    const postController = new PostController();
+    try {
+        if (!req.file) {
+            return res.status(400).json({ status: 'error', message: 'No se proporcionó ninguna imagen' });
+        }
+        const imageUrl = `/uploads/posts/${req.file.filename}`;
+        const updated = await postController.updatePost({
+            id: req.params.postId,
+            post_image: imageUrl
+        });
+        res.status(200).json({
+            status: 'success',
+            message: 'Imagen del post actualizada',
+            data: { post_image: imageUrl }
+        });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+});
+
 router.post('/create-new-publication', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {

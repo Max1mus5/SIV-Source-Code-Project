@@ -13,18 +13,6 @@ class BlockchainService {
         this.blockIndexMap = new Map(); // Mapa para almacenar transacciones por hash
     }
 
-    // Crear una nueva transacción
-    createTransaction(author, content, type = 'post') {
-        const transaction = new Transaction(author, content, Date.now(), type);
-        this.blockchain.pendingTransactions.push(transaction);
-        console.log("is validate chain?",this.isValidChain());
-        // Llenar los mapas con los datos existentes al inicializar
-        this.blockchain.chain.forEach(block => {
-            this.blockIndexMap.set(block.hash, block);
-        });
-        return transaction;
-    }
-
     // montar blockchain desde la base de datos
     async mountBlockchain(posts) {
         for (let post of posts) {
@@ -33,13 +21,6 @@ class BlockchainService {
             this.mineBlock(post.autor_id);
         }
         return true;
-    }
-
-    // Minar un nuevo bloque con las transacciones pendientes
-    mineBlock(minerAddress) {
-        const newBlock = this.blockchain.minePendingTransactions(minerAddress);
-        this.node.broadcastBlock(newBlock);
-        return newBlock;
     }
 
     // Obtener la blockchain completa
@@ -194,12 +175,16 @@ class BlockchainService {
             // Reindexar la blockchain
             this.reindexationBlockchain(index);
 
-            // Verificar si la blockchain sigue siendo válida
-           /*  if (this.isValidChain()) {
-                console.log("Blockchain válida después de eliminar el bloque.");
+            // Verificar si la blockchain sigue siendo válida después de eliminar
+            if (this.isValidChain()) {
+                console.log('Blockchain válida después de eliminar el bloque.');
             } else {
-                throw new Error("Error: La blockchain no es válida después de eliminar el bloque.");
-            } */
+                console.log('Blockchain inválida tras eliminación. Reorganizando...');
+                this.reorganizeBlockchain(index > 0 ? index - 1 : 0);
+                if (!this.isValidChain()) {
+                    throw new Error('Error: La blockchain no es válida tras reorganización.');
+                }
+            }
 
             return true;
         } catch (error) {
