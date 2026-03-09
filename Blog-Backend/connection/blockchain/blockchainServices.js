@@ -112,7 +112,7 @@ class BlockchainService {
         }
     }
 
-    removeBlockByIndex(index) {
+    async removeBlockByIndex(index) {
         try {
             if (index < 0 || index >= this.blockchain.chain.length) {
                 throw new Error(`Índice de bloque fuera de rango: ${index}`);
@@ -121,8 +121,38 @@ class BlockchainService {
             if (index === 0) {
                 throw new Error('No se puede eliminar el bloque génesis.');
             }
+
             const block = this.blockchain.chain[index];
-            return this.removeBlockByhash(block.hash);
+
+            // Actualizar el previousHash del bloque siguiente, si existe
+            const nextBlock = this.blockchain.chain[index + 1];
+            if (nextBlock) {
+                nextBlock.previousHash = block.previousHash;
+            }
+
+            // Eliminar entradas del blockIndexMap
+            this.blockIndexMap.delete(block.index);
+            if (Array.isArray(block.data)) {
+                block.data.forEach(tx => {
+                    if (tx && tx.hash) this.blockIndexMap.delete(tx.hash);
+                });
+            }
+
+            // Eliminar el bloque de la cadena
+            this.blockchain.chain.splice(index, 1);
+
+            // Reindexar desde el punto de eliminación
+            this.reindexationBlockchain(index);
+
+            // Verificar validez tras eliminar
+            if (!this.isValidChain()) {
+                this.reorganizeBlockchain(index > 0 ? index - 1 : 0);
+                if (!this.isValidChain()) {
+                    throw new Error('Error: La blockchain no es válida tras reorganización.');
+                }
+            }
+
+            return true;
         } catch (error) {
             throw new Error(`Error al eliminar bloque por índice: ${error.message}`);
         }
@@ -161,9 +191,14 @@ class BlockchainService {
                 
                 // Actualizar los mapas
                 this.blockIndexMap.set(i, block);
-                block.data.forEach(transaction => {
-                    this.blockIndexMap.set(transaction.hash, block);
-                });
+                // El bloque génesis tiene data como string, no como array
+                if (Array.isArray(block.data)) {
+                    block.data.forEach(transaction => {
+                        if (transaction && transaction.hash) {
+                            this.blockIndexMap.set(transaction.hash, block);
+                        }
+                    });
+                }
             }
             return true;
         } catch (error) {

@@ -1,9 +1,12 @@
 const { Sequelize } = require('sequelize');
 
+const isTest = process.env.NODE_ENV === 'test';
+const storage = isTest ? ':memory:' : 'database.sqlite3';
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: 'database.sqlite3',
+  storage,
+  logging: isTest ? false : false, // keep silent in all envs; change to `console.log` to debug SQL
 });
 
 sequelize.authenticate()

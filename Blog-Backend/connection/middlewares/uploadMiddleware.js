@@ -2,9 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// ─── Configuraciones de almacenamiento ───────────────────────────────────────
 
-/** Almacenamiento para imágenes de perfil */
 const profileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = path.join(__dirname, '../../public/uploads/profiles');
@@ -18,7 +16,6 @@ const profileStorage = multer.diskStorage({
     },
 });
 
-/** Almacenamiento para imágenes de posts */
 const postStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = path.join(__dirname, '../../public/uploads/posts');
@@ -32,7 +29,6 @@ const postStorage = multer.diskStorage({
     },
 });
 
-// ─── Filtro de tipos de archivo permitidos ────────────────────────────────────
 
 const imageFileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
@@ -47,28 +43,18 @@ const imageFileFilter = (req, file, cb) => {
     }
 };
 
-// ─── Instancias de multer ─────────────────────────────────────────────────────
-
-/** Middleware para subir imagen de perfil (max 2MB) */
 const uploadProfileImage = multer({
     storage: profileStorage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+    limits: { fileSize: 2 * 1024 * 1024 },
     fileFilter: imageFileFilter,
 }).single('profileImage');
 
-/** Middleware para subir imagen de post (max 5MB) */
 const uploadPostImage = multer({
     storage: postStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: imageFileFilter,
 }).single('post_image');
 
-// ─── Wrappers para manejo de errores ─────────────────────────────────────────
-
-/**
- * Wrapper que convierte el callback de multer en middleware async con manejo de errores.
- * @param {Function} multerMiddleware
- */
 const handleUpload = (multerMiddleware) => (req, res, next) => {
     multerMiddleware(req, res, (err) => {
         if (err instanceof multer.MulterError) {

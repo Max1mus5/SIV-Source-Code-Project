@@ -153,10 +153,10 @@ router.post('/add-node', (req, res) => {
     }
 });
 
-router.delete('/blockchain/block/:index', (req, res) => {
+router.delete('/blockchain/block/:index', async (req, res) => {
     const { index } = req.params;
     try {
-        const isDeleted = blockchainService.removeBlockByIndex(parseInt(index));
+        const isDeleted = await blockchainService.removeBlockByIndex(parseInt(index));
         if (isDeleted) {
             res.status(200).json({ message: 'Bloque eliminado exitosamente' });
         } else {

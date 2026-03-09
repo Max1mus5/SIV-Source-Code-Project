@@ -16,7 +16,7 @@ Documentación técnica interna del backend: decisiones de arquitectura, bugs co
 
 ---
 
-## ⚠️ Problema Crítico: `sqlite3` no compila en Node.js > v20
+## [!] Problema Critico: `sqlite3` no compila en Node.js > v20
 
 ### Qué pasó
 
@@ -203,14 +203,14 @@ startServices()
 
 | Módulo | Estado | Notas |
 |---|---|---|
-| User (auth) | ✅ Completo | Login, registro, verificación email, recuperar contraseña |
-| Posts | ✅ Completo | CRUD + integración blockchain |
-| Comments | ✅ ~95% | Sin blockchain en comentarios, sin editar comentario |
-| Reactions | ✅ Completo | Posts y comentarios |
-| Category | ✅ Completo | CRUD + relación many-to-many con posts |
-| Notifications | ✅ Corregido | Bug de import, campos y métodos faltantes resueltos |
-| Blockchain | ✅ ~98% | Validación post-eliminación restaurada |
-| Upload imágenes | ✅ Agregado | multer en `/user/profile-image/:username` y `/post/upload-image/:postId` |
+| User (auth) | Completo | Login, registro, verificación email, recuperar contraseña |
+| Posts | Completo | CRUD + integración blockchain |
+| Comments | ~95% | Sin blockchain en comentarios, sin editar comentario |
+| Reactions | Completo | Posts y comentarios |
+| Category | Completo | CRUD + relación many-to-many con posts |
+| Notifications | Corregido | Bug de import, campos y métodos faltantes resueltos |
+| Blockchain | ~98% | Validación post-eliminación restaurada |
+| Upload imágenes | Agregado | multer en `/user/profile-image/:username` y `/post/upload-image/:postId` |
 
 ### Cambios aplicados en Marzo 2026
 
@@ -248,3 +248,110 @@ startServices()
   app.use(helmet());
   ```
 - Mover almacenamiento de imágenes a un servicio cloud (S3, Cloudinary) antes de deployment.
+
+---
+
+## Pendientes — Hoja de Ruta
+
+### Fase 1 — Backend Core (Completada — Marzo 2026)
+
+Todos los bugs críticos resueltos. El backend está listo para levantar y probar.
+
+**Lo que se hizo:**
+- [x] `notificationController.js` — import roto (`notificationUtils` → `notifications.js`) + campos incorrectos (`userId/isRead/content` → `user_id/read/message`) + métodos faltantes (`getAllNotifications`, `getUnreadNotifications`, `getNotificationsByType`)
+- [x] Ruta `/notifications` no estaba registrada en `run_server.js` — añadida
+- [x] `blockchainServices.js` — métodos `createTransaction` y `mineBlock` estaban duplicados — eliminadas copias sin `blockIndexMap`
+- [x] `blockchainServices.js` — validación en `removeBlockByhash()` estaba comentada — restaurada con reorganización automática
+- [x] `blockchainServices.js` — `updateTransaction()` llamaba `getTransactionByHash()` (async) **sin** `await` — corregido
+- [x] `blockchainServices.js` — método `removeBlockByIndex()` no existía pero el router lo llamaba — implementado
+- [x] `blockchainRouter.js` — route `PUT /update-transaction` no era `async` aunque llama método async — corregido
+- [x] Instalar `multer` + crear `uploadMiddleware.js` + carpetas `public/uploads/profiles/` y `public/uploads/posts/`
+- [x] `PUT /user/profile-image/:username` — endpoint upload de foto de perfil
+- [x] `PUT /post/upload-image/:postId` — endpoint upload de imagen de post (solo actualiza DB, **no** toca blockchain)
+- [x] `run_server.js` sirve `/uploads` como ruta estática
+- [x] `start-dev.ps1` — script para levantar el servidor con Node 20 desde cualquier terminal
+- [x] Node.js v24 incompatible con `sqlite3` — solución documentada (usar Node 20 LTS via `fnm`)
+
+**Cómo levantar el servidor:**
+```powershell
+# Opción A — desde terminal donde ya activaste fnm:
+cd Blog-Backend
+npm run dev
+
+# Opción B — script autónomo:
+cd Blog-Backend
+powershell -ExecutionPolicy Bypass -File start-dev.ps1
+```
+
+---
+
+### Fase 2 — Frontend MVP (Proximo)
+
+Construir el frontend desde cero con **React + Vite**.
+
+#### Setup inicial
+- [ ] `npm create vite@latest Blog-Frontend -- --template react`
+- [ ] Instalar dependencias: `axios`, `react-router-dom`, `jwt-decode`, `react-hook-form`
+- [ ] Estructura de carpetas: `src/api/`, `src/components/`, `src/pages/`, `src/hooks/`, `src/context/`, `src/utils/`
+- [ ] Configurar variable de entorno `VITE_API_URL=http://localhost:3000`
+
+#### Autenticación
+- [ ] `src/api/authService.js` — funciones `login()`, `register()`, `verifyEmail()`, `recoverPassword()`, `resetPassword()`
+- [ ] `src/context/AuthContext.jsx` — estado global de sesión (`user`, `token`, `isAuthenticated`)
+- [ ] `src/utils/tokenManager.js` — guardar/recuperar/validar JWT en `localStorage`
+- [ ] `src/api/axiosInstance.js` — interceptor que inyecta `Authorization: Bearer <token>` automáticamente
+- [ ] `src/pages/Login.jsx` — formulario + llamada a API + redirect
+- [ ] `src/pages/Register.jsx` — formulario con validación de password fuerte
+- [ ] `src/pages/VerifyEmail.jsx` — recibe token de URL (`/verify/:token`) y llama al backend
+- [ ] `src/pages/RecoverPassword.jsx` — solicitar reset por email
+- [ ] `src/pages/ResetPassword.jsx` — nueva contraseña con token de URL
+- [ ] `src/components/ProtectedRoute.jsx` — redirige a `/login` si no hay sesión
+
+#### Layout y navegación
+- [ ] `src/components/Navbar.jsx` — logo, links (Feed, Perfil), botón Logout
+- [ ] `src/components/Layout.jsx` — header + footer + `<Outlet />`
+- [ ] Configurar React Router: rutas públicas (`/login`, `/register`, `/verify/:token`, `/recover`, `/reset/:token`) y privadas (`/feed`, `/post/:hash`, `/profile/:username`, `/create`)
+
+#### Visualización de posts
+- [ ] `src/api/postService.js` — `getPosts()`, `getPostByHash()`, `createPost()`, `deletePost()`
+- [ ] `src/components/PostCard.jsx` — título, autor, fecha, preview de contenido, imagen, likes, nº comentarios
+- [ ] `src/pages/Feed.jsx` — lista paginada de todos los posts
+- [ ] `src/pages/PostDetail.jsx` — post completo + sección de comentarios
+
+#### Crear post (MVP)
+- [ ] `src/pages/CreatePost.jsx` — formulario: título, contenido (textarea), categorías, imagen opcional
+- [ ] Mostrar spinner mientras se mina el bloque
+- [ ] Redirect a feed tras creación exitosa
+
+#### Perfil de usuario
+- [ ] `src/pages/Profile.jsx` — info del usuario + sus posts
+- [ ] Edición de bio y username
+- [ ] Upload de foto de perfil (usar `PUT /user/profile-image/:username`)
+
+---
+
+### Fase 3 — Backend: Mejoras y deuda tecnica
+
+Trabajo pendiente en backend mientras avanza el frontend.
+
+- [ ] **Comentarios** — agregar endpoint `PUT /comments/:id` para editar comentario
+- [ ] **Búsqueda de posts** — `GET /post/search?q=` con búsqueda por título/contenido (Sequelize `Op.like`)
+- [ ] **Paginación en feed** — `GET /post/my-feed?page=1&limit=10` (actualmente devuelve todos sin paginar)
+- [ ] **Security headers** — instalar y configurar `helmet`
+- [ ] **Límite de tamaño body** — agregar `express.json({ limit: '5mb' })` en `run_server.js`
+- [ ] **Variables de entorno faltantes** — documentar `baseURL` en el `.env.example` (ahora mismo no se documenta y es crítica para los posts)
+- [ ] **Tests unitarios básicos** — instalar `jest` + `supertest`, cubrir auth (register/login/verify)
+- [ ] **Logging estructurado** — reemplazar `console.log/error` con `winston`
+- [ ] Crear `.env.example` para que otros desarrolladores sepan qué variables configurar
+
+---
+
+### Fase 4 — Features avanzados (Despues de MVP)
+
+- [ ] WebSockets con `socket.io` — notificaciones en tiempo real
+- [ ] Dashboard de admin — listado de usuarios, gestión de roles, moderación de posts
+- [ ] Sistema de favoritos funcional (el campo existe en el schema pero no hay endpoints)
+- [ ] Refresh tokens (actualmente JWT expira en 4h sin renovación)
+- [ ] Migrar almacenamiento de imágenes a Cloudinary o S3
+- [ ] Docker + CI/CD pipeline
+- [ ] Estrategia de pruning / archivado para la blockchain a escala
