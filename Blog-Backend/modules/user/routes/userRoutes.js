@@ -141,16 +141,31 @@ router.post('/register',
     async (req, res) => {
         try {
             const user = await UserController.createUser(req.body);
+            
+            // Determinar mensaje según si el email se envió o no
+            let message = 'Usuario registrado exitosamente';
+            let warning = null;
+            
+            if (user.emailSent) {
+                message = 'Se ha enviado un correo de verificación a su email';
+            } else {
+                warning = 'Usuario creado pero no se pudo enviar el correo de verificación. Contacte al administrador.';
+                console.error('⚠️ Usuario creado sin email de verificación:', user.email);
+            }
+            
             res.status(201).json({
                 status: 'success',
-                message: 'Se ha enviado un correo de verificación a su email',
+                message,
+                warning,
                 data: {
                     userId: user.id,
                     email: user.email,
+                    emailSent: user.emailSent,
                     verificationDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
                 }
             });
         } catch (error) {
+            console.error('❌ Error en registro:', error.message);
             res.status(400).json({
                 status: 'error',
                 error: error.message,

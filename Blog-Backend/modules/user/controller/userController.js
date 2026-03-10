@@ -77,14 +77,28 @@ class UserController {
             }, { transaction });
             newUser.id = user.id; // Set the ID of the class instance
 
+            // Intentar enviar email ANTES del commit
+            let emailSent = false;
+            let emailError = null;
+            try {
+                await sendVerificationEmail(newUser.email, newUser.validationToken);
+                console.log("✓ Correo de verificación enviado a:", newUser.email);
+                emailSent = true;
+            } catch (emailErr) {
+                console.error("⚠️ Error enviando email de verificación:", emailErr.message);
+                emailError = emailErr.message;
+                // No lanzar el error, solo registrarlo
+            }
+
             await transaction.commit();
 
             /* eliminar cuenta despues de 24H */
             this.scheduleAccountDeletion(user.id, tokenExpiration);
 
+            // Retornar info sobre el email
+            newUser.emailSent = emailSent;
+            newUser.emailError = emailError;
             
-            let info = await sendVerificationEmail(newUser.email, newUser.validationToken);
-            console.log("correo enviado correctamente.\n");
             return newUser;
         } catch (error) {
             await transaction.rollback();

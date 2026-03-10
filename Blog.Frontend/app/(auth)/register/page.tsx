@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [emailWarning, setEmailWarning] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -23,13 +24,19 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setEmailWarning(null)
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden')
       return
     }
     setIsLoading(true)
     try {
-      await apiFetch('/user/register', {
+      const response = await apiFetch<{
+        status: string;
+        message: string;
+        warning?: string;
+        data: any;
+      }>('/user/register', {
         method: 'POST',
         body: JSON.stringify({
           username: formData.username,
@@ -37,6 +44,12 @@ export default function RegisterPage() {
           password: formData.password,
         }),
       })
+      
+      // Capturar warning si el email no se envió
+      if (response.warning) {
+        setEmailWarning(response.warning)
+      }
+      
       setSuccess(true)
     } catch (err) {
       if (err instanceof ApiError) {
@@ -57,12 +70,29 @@ export default function RegisterPage() {
             <MailCheck className="w-8 h-8 text-emerald-400" />
           </div>
           <h2 className="text-2xl font-bold text-foreground">¡Cuenta creada!</h2>
-          <p className="text-muted-foreground">
-            Enviamos un enlace de verificación a <span className="text-foreground font-medium">{formData.email}</span>. Revisa tu bandeja de entrada (y la carpeta de spam) para activar tu cuenta.
-          </p>
-          <p className="text-xs text-muted-foreground/60">
-            En entornos de desarrollo local, es posible que el correo no llegue si el servicio SMTP no está configurado.
-          </p>
+          
+          {emailWarning ? (
+            <>
+              <div className="w-full bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-amber-400 text-left">
+                <p className="font-semibold mb-2">⚠️ Advertencia</p>
+                <p className="text-sm">{emailWarning}</p>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Tu cuenta ha sido creada pero el correo de verificación no se pudo enviar. 
+                Contacta al administrador para activar tu cuenta manualmente.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground">
+                Enviamos un enlace de verificación a <span className="text-foreground font-medium">{formData.email}</span>. Revisa tu bandeja de entrada (y la carpeta de spam) para activar tu cuenta.
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                El enlace expira en 24 horas.
+              </p>
+            </>
+          )}
+          
           <Link href="/login" className="text-primary hover:underline font-medium text-sm">
             Ir a Iniciar Sesión
           </Link>

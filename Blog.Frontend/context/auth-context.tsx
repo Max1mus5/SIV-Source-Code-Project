@@ -62,14 +62,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = useCallback(async (username: string, password: string) => {
-    const res = await apiFetch<{ token: string; user: User }>('/user/login', {
+    const res = await apiFetch<{ status: string; data: { token: string; user: User; expiresIn: number } }>('/user/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     })
-    localStorage.setItem(TOKEN_KEY, res.token)
-    localStorage.setItem(USER_KEY, JSON.stringify(res.user))
-    setToken(res.token)
-    setUser(res.user)
+    
+    // Backend devuelve { status: "success", data: { token, user, expiresIn } }
+    const { token, user } = res.data
+    
+    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(USER_KEY, JSON.stringify(user))
+    setToken(token)
+    setUser(user)
+    
+    console.log('✓ Login exitoso:', user.username || user.name)
   }, [])
 
   const logout = useCallback(() => {
