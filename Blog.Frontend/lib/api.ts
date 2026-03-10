@@ -22,8 +22,11 @@ export async function apiFetch<T>(
     ...(headers as Record<string, string>),
   }
 
-  if (token) {
-    mergedHeaders['Authorization'] = `Bearer ${token}`
+  // Auto-inject token from localStorage if not provided and we're in browser
+  const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('siv_token') : null)
+  
+  if (authToken) {
+    mergedHeaders['Authorization'] = `Bearer ${authToken}`
   }
 
   // Remove Content-Type for FormData so fetch can set the correct boundary

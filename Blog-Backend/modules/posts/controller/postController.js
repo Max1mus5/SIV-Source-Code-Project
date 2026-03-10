@@ -14,56 +14,61 @@ class PostController {
         const transaction = await sequelize.transaction();
         let blockIndex;
         try {
-            // Validar campos requeridos
-            validateRequiredFields(postData, ['autor', 'title', 'content', 'image']);
+            // Validar campos requeridos (image es opcional, se sube después)
+            validateRequiredFields(postData, ['autor_id', 'title', 'content']);
 
             // Convertir autor a número entero si es necesario
-            const autorId = convertToInt(postData.autor, 'autor');
+            const autorId = convertToInt(postData.autor_id, 'autor_id');
 
-            // Crear instancia de Post
-            const newPostInstance = PostInstance.createPost(
-                autorId,
-                postData.title,
-                postData.content,
-                postData.image,
-                new Date().toISOString(),
-                postData.hashBlockchain,
-                postData.likes,
-                0
-            );
+            // Valores por defecto
+            const estado = postData.estado || 'draft';
+            const resume = postData.resume || '';
+            const post_image = postData.post_image || null;
 
-            // Crear la transacción en la blockchain
-            const transactionBlockchain = await axios.post(`${baseURL}:${blockchainPort}/blockchain/create-transaction`, {
-                autor: newPostInstance.autor,
-                content: newPostInstance.content
-            });
+            let hashBlockchain = null;
 
-            // Minar el bloque con la transacción del post
-            const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
-                minerAddress: newPostInstance.autor
-            });
-            blockIndex = newBlock.data.index;
-            newPostInstance.hashBlockchain = newBlock.data.block.hash;
+            // Solo minar en blockchain si el estado es 'published'
+            if (estado === 'published') {
+                // Crear la transacción en la blockchain
+                await axios.post(`${baseURL}:${blockchainPort}/blockchain/create-transaction`, {
+                    autor: autorId,
+                    content: postData.content
+                });
+
+                // Minar el bloque con la transacción del post
+                const newBlock = await axios.post(`${baseURL}:${blockchainPort}/blockchain/mine-block`, {
+                    minerAddress: autorId
+                });
+                blockIndex = newBlock.data.index;
+                hashBlockchain = newBlock.data.block.hash;
+            }
 
             // Crear el post en la base de datos con la transacción activa
             const newPost = await Posts.create({
-                autor_id: newPostInstance.autor,
-                date: newPostInstance.date,
-                title: newPostInstance.title,
-                content: newPostInstance.content,
-                post_image: newPostInstance.image,
-                likes: newPostInstance.likes,
-                comments: newPostInstance.comments,
-                hashBlockchain: newPostInstance.hashBlockchain,
+                autor_id: autorId,
+                date: new Date().toISOString(),
+                title: postData.title,
+                content: postData.content,
+                resume: resume,
+                post_image: post_image,
+                category_id: postData.category_id || null,
+                estado: estado,
+                likes: 0,
+                comments: 0,
+                hashBlockchain: hashBlockchain,
             }, { transaction });
 
             await transaction.commit();
-            console.log(`Nuevo post creado con ID: ${newPost.id}`);
+            console.log(`Nuevo post creado con ID: ${newPost.id}, estado: ${estado}`);
             return newPost;
         } catch (error) {
             if (blockIndex !== undefined) {
                 // Eliminar el bloque en caso de error
-                await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${blockIndex}`);
+                try {
+                    await axios.delete(`${baseURL}:${blockchainPort}/blockchain/block/${blockIndex}`);
+                } catch (deleteError) {
+                    console.error('Error al eliminar bloque:', deleteError.message);
+                }
             }
             await transaction.rollback();
             console.error(`Error al crear el post: ${error.message}`);
@@ -169,12 +174,49 @@ class PostController {
 
     async getAllPosts() {
         try {
-            const posts = await Posts.findAll();
+            // Solo devolver posts PUBLICADOS (no borradores)
+            const posts = await Posts.findAll({
+                where: {
+                    estado: 'published'
+                }
+            });
             // Ordenar por más recientes
             posts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
             return posts;
         } catch (error) {
             console.error(`Error al obtener los posts: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async getUserDrafts(userId) {
+        try {
+            const drafts = await Posts.findAll({
+                where: {
+                    autor_id: userId,
+                    estado: 'draft'
+                },
+                order: [['updatedAt', 'DESC']]
+            });
+            return drafts;
+        } catch (error) {
+            console.error(`Error al obtener borradores: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async getUserPublishedPosts(userId) {
+        try {
+            const posts = await Posts.findAll({
+                where: {
+                    autor_id: userId,
+                    estado: 'published'
+                },
+                order: [['updatedAt', 'DESC']]
+            });
+            return posts;
+        } catch (error) {
+            console.error(`Error al obtener posts del usuario: ${error.message}`);
             throw error;
         }
     }

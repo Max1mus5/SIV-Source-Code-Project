@@ -111,8 +111,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   const currentProfileImage = user?.profile_image || user?.profileImage
-    ? `${apiUrl}/uploads/profiles/${user?.profile_image || user?.profileImage}`
-    : null;
+    ? `${apiUrl}${user?.profile_image || user?.profileImage}`
+    : '/images/default-avatar.svg';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

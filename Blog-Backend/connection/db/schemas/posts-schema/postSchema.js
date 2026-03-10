@@ -27,9 +27,22 @@ const Posts = sequelize.define("Posts", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  resume:{
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  category_id:{
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  estado:{
+    type: DataTypes.STRING,
+    defaultValue: 'draft',
+    allowNull: false,
+  },
   hashBlockchain:{
     type: DataTypes.STRING,
-    allowNull: false, 
+    allowNull: true,  // NULL para borradores
   },
   comments:{
     type: DataTypes.INTEGER,

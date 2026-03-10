@@ -11,51 +11,40 @@ import {
   BookOpen,
   Heart,
   MessageSquare,
-  Users,
-  TrendingUp,
   Calendar,
   MapPin,
   LinkIcon,
   PlusCircle,
   Loader2,
+  FileText,
+  Eye,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/context/auth-context"
 import EditProfileModal from "@/components/edit-profile-modal"
+import { apiFetch } from "@/lib/api"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
-const mockPosts = [
-  {
-    id: 1,
-    title: "Introducción a Unity para principiantes",
-    excerpt: "Una guía completa para comenzar en el desarrollo de videojuegos...",
-    image: "/images/game-design-document.jpg",
-    likes: 45,
-    comments: 12,
-    date: "Hace 2 días",
-  },
-  {
-    id: 2,
-    title: "Patrones de diseño en C# para juegos",
-    excerpt: "Aprende los patrones más utilizados en la industria del gaming...",
-    image: "/images/programacion-csharp.jpg",
-    likes: 67,
-    comments: 23,
-    date: "Hace 1 semana",
-  },
-  {
-    id: 3,
-    title: "Creando animaciones fluidas con CSS",
-    excerpt: "Tips y trucos para mejorar la experiencia de usuario...",
-    image: "/images/animated-toggle.jpg",
-    likes: 32,
-    comments: 8,
-    date: "Hace 2 semanas",
-  },
-]
+interface Post {
+  id: number
+  title: string
+  content: string
+  resume?: string
+  estado: 'draft' | 'published'
+  hashBlockchain?: string
+  autor_id: number
+  createdAt: string
+  updatedAt: string
+  likes: number
+  comments: number
+  category_id?: number
+}
 
 const tabs = [
   { id: "posts", label: "Publicaciones", icon: BookOpen },
+  { id: "drafts", label: "Borradores", icon: FileText },
   { id: "likes", label: "Me gusta", icon: Heart },
   { id: "comments", label: "Comentarios", icon: MessageSquare },
 ]
@@ -65,6 +54,32 @@ export default function DashboardPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("posts")
   const [isLoading, setIsLoading] = useState(true)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [drafts, setDrafts] = useState<Post[]>([])
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false)
+
+  // Fetch posts and drafts
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchUserContent()
+    }
+  }, [isAuthenticated, user])
+
+  const fetchUserContent = async () => {
+    setIsLoadingPosts(true)
+    try {
+      const [postsRes, draftsRes] = await Promise.all([
+        apiFetch<{ data: Post[] }>('/post/my-posts'),
+        apiFetch<{ data: Post[] }>('/post/my-drafts')
+      ])
+      setPosts(postsRes?.data || [])
+      setDrafts(draftsRes?.data || [])
+    } catch (error) {
+      console.error('Error fetching user content:', error)
+    } finally {
+      setIsLoadingPosts(false)
+    }
+  }
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   useEffect(() => {
@@ -99,8 +114,8 @@ export default function DashboardPage() {
   // Use actual API URL for profile images
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
   const profileImageUrl = user.profile_image || user.profileImage
-    ? `${apiUrl}/uploads/profiles/${user.profile_image || user.profileImage}`
-    : '/images/team-photo.jpg' // Fallback image
+    ? `${apiUrl}${user.profile_image || user.profileImage}`
+    : '/images/default-avatar.svg' // SVG predeterminado
 
   return (
     <div className="min-h-screen py-8">
@@ -178,25 +193,19 @@ export default function DashboardPage() {
               <div className="flex gap-4 sm:gap-8 pt-4 border-t border-border">
                 <div className="text-center px-4 py-2 rounded-xl bg-background/30 hover:bg-primary/10 transition-colors">
                   <p className="text-2xl font-bold text-foreground">
-                    {mockPosts.length}
+                    {posts.length}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">Publicaciones</p>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-background/30 hover:bg-primary/10 transition-colors">
                   <p className="text-2xl font-bold text-foreground">
-                    0
+                    {drafts.length}
                   </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Seguidores</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Borradores</p>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-background/30 hover:bg-primary/10 transition-colors">
                   <p className="text-2xl font-bold text-foreground">
-                    0
-                  </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Siguiendo</p>
-                </div>
-                <div className="text-center px-4 py-2 rounded-xl bg-primary/10 ring-1 ring-primary/30">
-                  <p className="text-2xl font-bold text-primary">
-                    0
+                    {posts.reduce((sum, p) => sum + (p.likes || 0), 0)}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">Me gusta</p>
                 </div>
@@ -243,108 +252,118 @@ export default function DashboardPage() {
 
             {/* Posts List */}
             <div className="space-y-4">
-              {mockPosts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/blogs/${post.id}`}
-                  className="block bg-card/80 backdrop-blur-sm border border-border rounded-xl overflow-hidden hover:border-primary transition-colors"
-                >
-                  <div className="flex">
-                    <div className="w-40 h-32 flex-shrink-0">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        width={160}
-                        height={128}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 p-4">
-                      <h3 className="font-semibold text-foreground mb-2">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                        {post.excerpt}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Heart className="w-4 h-4" />
-                          {post.likes}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4" />
-                          {post.comments}
-                        </span>
-                        <span>{post.date}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+              {isLoadingPosts ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                  <p className="text-sm text-muted-foreground mt-2">Cargando contenido...</p>
+                </div>
+              ) : activeTab === "posts" ? (
+                posts.length > 0 ? (
+                  posts.map((post) => (
+                    <Card key={post.id} className="hover:border-primary transition-colors">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg hover:text-primary cursor-pointer">
+                              <Link href={`/blogs/${post.hashBlockchain}/${post.autor_id}`}>
+                                {post.title}
+                              </Link>
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {new Date(post.createdAt).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                            Publicado
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground line-clamp-2">
+                          {post.resume || post.content.substring(0, 150)}
+                        </p>
+                        <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-4 h-4" />
+                            {post.likes || 0}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4" />
+                            {post.comments || 0}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            Ver
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Aún no has publicado nada. ¡Crea tu primera publicación!
+                  </p>
+                )
+              ) : activeTab === "drafts" ? (
+                drafts.length > 0 ? (
+                  drafts.map((draft) => (
+                    <Card key={draft.id} className="hover:border-primary transition-colors">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg hover:text-primary cursor-pointer">
+                              <Link href={`/blogs/edit/${draft.id}`}>
+                                {draft.title}
+                              </Link>
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Actualizado: {new Date(draft.updatedAt).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                            Borrador
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground line-clamp-2">
+                          {draft.resume || draft.content.substring(0, 150)}
+                        </p>
+                        <div className="flex gap-4 mt-4">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/blogs/edit/${draft.id}`}>
+                              <Edit3 className="w-4 h-4 mr-2" />
+                              Editar
+                            </Link>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    No tienes borradores guardados.
+                  </p>
+                )
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  Contenido próximamente...
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Temporarily hidden until real data is available */}
           <div className="space-y-6">
-            {/* Quick Stats Card */}
-            <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-6">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Estadísticas Rápidas
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">
-                    Vistas esta semana
-                  </span>
-                  <span className="font-semibold text-foreground">1,234</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">
-                    Nuevos seguidores
-                  </span>
-                  <span className="font-semibold text-primary">+28</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">
-                    Engagement rate
-                  </span>
-                  <span className="font-semibold text-foreground">4.2%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Suggested Users */}
-            <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-6">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                Usuarios Sugeridos
-              </h3>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                      <User className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">
-                        Usuario {i}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        @usuario{i}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                    >
-                      Seguir
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Sidebar content can be added later with real statistics */}
           </div>
         </div>
       </div>

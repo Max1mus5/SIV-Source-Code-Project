@@ -10,6 +10,7 @@ const reactionRoutes = require('./modules/reactions/routes/reactionRouter');
 const notificationRoutes = require('./modules/notifications/routes/notificationRouter');
 const { setupSwagger } = require('./connection/swaggerDocs');
 const { sequelize } = require('./connection/db/database');
+const { runMigrations } = require('./connection/db/runMigrations');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -57,45 +58,14 @@ app.use(async (req, res, next) => {
 // Documentación Swagger UI
 setupSwagger(app);
 
-// Rutas principales con manejo de errores
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
-
-app.use('/user', asyncHandler(async (req, res, next) => {
-    if (!userRoutes) throw new Error('User routes not properly initialized');
-    return userRoutes(req, res, next);
-}));
-
-app.use('/reset', asyncHandler(async (req, res, next) => {
-    if (!resetPasswordRoutes) throw new Error('Reset password routes not properly initialized');
-    return resetPasswordRoutes(req, res, next);
-}));
-
-app.use('/post', asyncHandler(async (req, res, next) => {
-    if (!postRoutes) throw new Error('Post routes not properly initialized');
-    return postRoutes(req, res, next);
-}));
-
-app.use('/comments', asyncHandler(async (req, res, next) => {
-    if (!commentRoutes) throw new Error('Comment routes not properly initialized');
-    return commentRoutes(req, res, next);
-}));
-
-app.use('/category', asyncHandler(async (req, res, next) => {
-    if (!categoryRoutes) throw new Error('Category routes not properly initialized');
-    return categoryRoutes(req, res, next);
-}));
-
-app.use('/reaction', asyncHandler(async (req, res, next) => {
-    if (!reactionRoutes) throw new Error('Reaction routes not properly initialized');
-    return reactionRoutes(req, res, next);
-}));
-
-app.use('/notifications', asyncHandler(async (req, res, next) => {
-    if (!notificationRoutes) throw new Error('Notification routes not properly initialized');
-    return notificationRoutes(req, res, next);
-}));
+// Rutas principales
+app.use('/user', userRoutes);
+app.use('/reset', resetPasswordRoutes);
+app.use('/post', postRoutes);
+app.use('/comments', commentRoutes);
+app.use('/category', categoryRoutes);
+app.use('/reaction', reactionRoutes);
+app.use('/notifications', notificationRoutes);
 
 const port = process.env.PORT || 3000;
 
@@ -133,8 +103,12 @@ app.use((req, res) => {
 
 const startServer = async () => {
     try {
-        await sequelize.query('DROP TABLE IF EXISTS `Users_backup`');
-        await sequelize.sync({ alter: true });
+        // Ejecutar migraciones antes de sincronizar
+        await runMigrations();
+        
+        // Sincronizar sin alterar estructura (ya manejado por migraciones)
+        await sequelize.sync({ force: false });
+        
         app.listen(port, () => {
             console.log(`${process.env.baseURL}:${port}`);
         });

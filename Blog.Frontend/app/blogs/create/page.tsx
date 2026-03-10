@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input"
 import { apiFetch, ApiError } from "@/lib/api"
 import { useAuth } from "@/context/auth-context"
 import type { Category } from "@/lib/types"
+import MarkdownPreview from "@/components/markdown-preview"
 
 export default function CreateBlogPage() {
   const router = useRouter()
@@ -119,10 +120,13 @@ export default function CreateBlogPage() {
         }
       }
 
-      if (newPost?.hash && newPost?.autor_id) {
-        router.push(`/blogs/${newPost.hash}/${newPost.autor_id}`)
+      // Redirigir según el tipo de publicación
+      if (isDraft) {
+        router.push('/dashboard')  // Borradores al dashboard
+      } else if (newPost?.hash && newPost?.autor_id) {
+        router.push(`/blogs/${newPost.hash}/${newPost.autor_id}`)  // Publicados a detalle
       } else {
-        router.push('/blogs')
+        router.push('/blogs')  // Fallback a lista
       }
     } catch (err) {
       setIsMining(false)
@@ -472,11 +476,9 @@ export default function CreateBlogPage() {
               </div>
             )}
 
-            <div className="prose prose-invert max-w-none">
+            <div className="max-w-none">
               {formData.content ? (
-                <div className="whitespace-pre-wrap text-foreground">
-                  {formData.content}
-                </div>
+                <MarkdownPreview content={formData.content} />
               ) : (
                 <p className="text-muted-foreground italic">
                   El contenido aparecerá aquí...

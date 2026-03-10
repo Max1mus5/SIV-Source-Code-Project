@@ -30,10 +30,10 @@ const filterData = async ( userSchema, updateData) => {
   const user = await userSchema.findOne({ where: { name: updateData.username } });
   const filteredData = {};
   for (const key in updateData) {
+    // Solo incluir valores que no estén vacíos
     if (updateData[key] !== undefined && updateData[key] !== null && updateData[key] !== "") {
-      filteredData[key] = user[key];
-    } 
-    filteredData[key] = updateData[key];
+      filteredData[key] = updateData[key];  // ✅ Usar valor NUEVO, no viejo
+    }
   }
   return filteredData;
 }

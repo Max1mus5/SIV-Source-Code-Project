@@ -41,15 +41,21 @@ router.put('/upload-image/:postId', authenticateToken, uploadPostImage, async (r
 router.post('/create-new-publication', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {
-        const newPost = await postController.createPost(req.body);
+        // Extraer el autor del JWT
+        const postData = {
+            ...req.body,
+            autor_id: req.user.id
+        };
+        const newPost = await postController.createPost(postData);
         res.status(201).json({ 
             status: 'success',
             data: newPost
         });
     } catch (error) {
+        console.error('Error al crear el post:', error.message);
         res.status(500).json({ 
             status: 'error', 
-            message: 'Error al crear la publicación' 
+            message: error.message || 'Error al crear la publicación' 
         });
     }
 });
@@ -93,6 +99,40 @@ router.get('/my-feed', authenticateToken, async (req, res) => {
         res.status(500).json({ 
             status: 'error', 
             message: 'Error al obtener el feed' 
+        });
+    }
+});
+
+// Obtener borradores del usuario autenticado
+router.get('/my-drafts', authenticateToken, async (req, res) => {
+    const postController = new PostController();
+    try {
+        const drafts = await postController.getUserDrafts(req.user.id);
+        res.status(200).json({
+            status: 'success',
+            data: drafts
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error al obtener borradores'
+        });
+    }
+});
+
+// Obtener posts publicados del usuario autenticado
+router.get('/my-posts', authenticateToken, async (req, res) => {
+    const postController = new PostController();
+    try {
+        const posts = await postController.getUserPublishedPosts(req.user.id);
+        res.status(200).json({
+            status: 'success',
+            data: posts
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error al obtener posts publicados'
         });
     }
 });

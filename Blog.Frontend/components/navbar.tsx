@@ -56,10 +56,13 @@ export function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated ? (
             <>
-              <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              <Link 
+                href="/dashboard"
+                className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              >
                 <User className="h-4 w-4" />
-                {user?.name}
-              </span>
+                {user?.name || user?.username}
+              </Link>
               <button
                 onClick={logout}
                 className="flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-destructive"

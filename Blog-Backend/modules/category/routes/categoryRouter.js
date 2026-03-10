@@ -9,7 +9,8 @@ router.get('/getCategory', async (req, res) => {
         const category = await CategoryInstance.getCategory();
         res.status(200).json(category);
     } catch (error) {
-        res.status(500).json({ message: 'Error occured in getting categories' });
+        console.error('Error getting categories:', error.message);
+        res.status(500).json({ message: 'Error occured in getting categories', error: error.message });
     }
 });
 
@@ -140,4 +141,6 @@ router.get('/docs', (req, res) => {
         
     });
 });
+
+module.exports = router;
 

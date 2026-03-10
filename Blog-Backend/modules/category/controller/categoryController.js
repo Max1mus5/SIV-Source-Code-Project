@@ -9,13 +9,18 @@ dotenv.config();
 class CategoryController {
     async getCategory() {
         try {
-            // obtener todos los nombres de las categorías
-            const categories = await Category.findAll();
-            const categoryNames = categories.map(category => category.name);
-            return categoryNames;
+            // obtener todas las categorías con sus IDs
+            const categories = await Category.findAll({
+                attributes: ['id', 'name']
+            });
+            // Formatear respuesta para que coincida con el frontend
+            const formattedCategories = categories.map(category => ({
+                id: category.id,
+                category_name: category.name
+            }));
+            return { data: formattedCategories };
         } catch (error) {
             throw new Error(error.message);
-            
         }
     }
 
