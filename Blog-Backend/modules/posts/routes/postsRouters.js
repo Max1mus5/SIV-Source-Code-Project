@@ -65,6 +65,22 @@ router.get('/:hash/:autor',  async (req, res) => {
     }
 });
 
+router.get('/feed', async (req, res) => {
+    const postController = new PostController();
+    try {
+        const posts = await postController.getAllPosts();
+        res.status(200).json({
+            status: 'success',
+            data: posts
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Error al obtener el feed'
+        });
+    }
+});
+
 router.get('/my-feed', authenticateToken, async (req, res) => {
     const postController = new PostController();
     try {

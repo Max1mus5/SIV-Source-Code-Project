@@ -8,6 +8,7 @@ const commentRoutes = require('./modules/comments/routes/commentsRouter');
 const categoryRoutes = require('./modules/category/routes/categoryRouter');
 const reactionRoutes = require('./modules/reactions/routes/reactionRouter');
 const notificationRoutes = require('./modules/notifications/routes/notificationRouter');
+const { setupSwagger } = require('./connection/swaggerDocs');
 const { sequelize } = require('./connection/db/database');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -52,6 +53,9 @@ app.use(async (req, res, next) => {
         res.status(503).json({ error: 'Database service unavailable' });
     }
 });
+
+// Documentación Swagger UI
+setupSwagger(app);
 
 // Rutas principales con manejo de errores
 const asyncHandler = fn => (req, res, next) => {
