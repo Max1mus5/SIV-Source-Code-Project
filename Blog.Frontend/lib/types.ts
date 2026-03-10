@@ -1,11 +1,15 @@
 export interface User {
   id: number
-  name: string
+  username: string
+  name?: string
   email: string
+  bio?: string
   profile_image?: string
+  profileImage?: string // Alias for backwards compatibility
   role?: string
   description?: string
   createdAt?: string
+  updatedAt?: string
 }
 
 export interface Category {

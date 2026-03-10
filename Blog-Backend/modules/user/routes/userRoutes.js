@@ -8,6 +8,13 @@ const { sendPasswordResetEmail, passwordSendResetEmail } = require('../../../con
 const { validateRequest } = require('../../../connection/middlewares/validationMiddleware');
 const { rateLimiter } = require('../../../connection/middlewares/rateLimiter');
 const { uploadProfileImage } = require('../../../connection/middlewares/uploadMiddleware');
+const { 
+    trackFailedLogin, 
+    blockBruteForce, 
+    loginGeneralLimiter,
+    passwordRecoveryLimiter,
+    registrationLimiter 
+} = require('../../../connection/middlewares/authRateLimiter');
 
 //#region DOCS
 router.get('/docs', (req, res) => {
@@ -129,7 +136,7 @@ const registerValidation = validateRequest(Joi.object({
 
 // registro con rate limiting y validación
 router.post('/register',
-    rateLimiter({ windowMs: 60 * 60 * 1000, max: 5 }), // 5 intentos por hora
+    registrationLimiter, // 3 registros por hora por IP
     registerValidation,
     async (req, res) => {
         try {
@@ -175,18 +182,10 @@ router.get('/verify/:token',
 );
 
 //#region Ruta de login 
-// Configuración del rate limiter
-const loginLimiter = rateLimiter({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // 5 intentos
-    message: {
-        status: 'error',
-        code: 'TOO_MANY_REQUESTS',
-        message: 'Demasiados intentos de inicio de sesión. Por favor, intente nuevamente en 15 minutos.'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// Sistema inteligente de rate limiting:
+// - loginGeneralLimiter: 50 requests totales en 15 min (muy permisivo)
+// - blockBruteForce: Bloquea después de 10 intentos FALLIDOS en 15 min
+// - trackFailedLogin: Solo cuenta intentos fallidos, resetea en login exitoso
 
 // Esquema de validación
 const loginSchema = Joi.object({
@@ -209,7 +208,9 @@ const loginSchema = Joi.object({
 });
 
 router.post('/login',
-    loginLimiter,
+    loginGeneralLimiter,      // Rate limit general (50 requests/15min)
+    blockBruteForce,          // Bloquea después de 10 intentos fallidos
+    trackFailedLogin,         // Rastrea intentos fallidos y resetea en éxito
     validateRequest(loginSchema),
     async (req, res) => {
         try {
@@ -259,7 +260,7 @@ router.post('/login',
 
 // Ruta de recuperación de contraseña
 router.post('/recover-password',
-    rateLimiter({ windowMs: 60 * 60 * 1000, max: 3 }), // 3 intentos por hora
+    passwordRecoveryLimiter, // 5 intentos por hora
     validateRequest(Joi.object({
         email: Joi.string().email().required()
     })),

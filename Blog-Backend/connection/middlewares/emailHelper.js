@@ -1,9 +1,19 @@
 const nodemailer = require("nodemailer");
 
+/**
+ * Send an email via Gmail
+ * @param {string} to - Recipient email address
+ * @param {string} subject - Email subject
+ * @param {string} text - Plain text content (fallback)
+ * @param {string} [html] - HTML content (optional, preferred)
+ */
+const emailHelper = async (to, subject, text, html = null) => {
+  const userGmail = process.env.SIV_EMAIL; // email who sends the emails
+  const passAppGmail = process.env.SIV_APP_PASSWORD; // App password from Google
 
-const emailHelper = async (to, subject, text) => {
-  const userGmail = process.env.SIV_EMAIL//email who sends the emails between ""
-  const passAppGmail = process.env.SIV_APP_PASSWORD;// #enable double step verification security in your account and after go to: https://myaccount.google.com/apppasswords
+  if (!userGmail || !passAppGmail) {
+    throw new Error('SIV_EMAIL and SIV_APP_PASSWORD must be set in .env');
+  }
 
   // Create a transporter
   let transporter = nodemailer.createTransport({
@@ -14,15 +24,18 @@ const emailHelper = async (to, subject, text) => {
     },
   });
 
-  console.log(userGmail, passAppGmail);
-
   // Set up email options
   let mailOptions = {
-    from: "amateratsu421@gmail.com",
+    from: `"SIV Blog" <${userGmail}>`, // Use env variable for sender
     to: to,
     subject: subject,
-    text: text,
+    text: text, // Plain text fallback
   };
+
+  // Add HTML if provided
+  if (html) {
+    mailOptions.html = html;
+  }
 
   // Send the email
   try {

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -16,24 +17,12 @@ import {
   MapPin,
   LinkIcon,
   PlusCircle,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-const mockUser = {
-  name: "Juan Pérez",
-  username: "juanperez",
-  avatar: "/images/team-photo.jpg",
-  bio: "Desarrollador de videojuegos apasionado por la gamificación y el aprendizaje interactivo. Miembro activo del SIV.",
-  location: "Pereira, Colombia",
-  website: "juanperez.dev",
-  joinedDate: "Marzo 2024",
-  stats: {
-    posts: 12,
-    followers: 234,
-    following: 156,
-    likes: 1420,
-  },
-}
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/context/auth-context"
+import EditProfileModal from "@/components/edit-profile-modal"
 
 const mockPosts = [
   {
@@ -72,7 +61,46 @@ const tabs = [
 ]
 
 export default function DashboardPage() {
+  const { user, isAuthenticated } = useAuth()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("posts")
+  const [isLoading, setIsLoading] = useState(true)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.push('/login')
+    } else {
+      setIsLoading(false)
+    }
+  }, [isAuthenticated, router])
+
+  // Show loading while checking authentication
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Cargando perfil...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Format join date from createdAt
+  const joinedDate = user.createdAt 
+    ? new Date(user.createdAt).toLocaleDateString('es-ES', { 
+        month: 'long', 
+        year: 'numeric' 
+      })
+    : 'Fecha desconocida'
+
+  // Use actual API URL for profile images
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  const profileImageUrl = user.profile_image || user.profileImage
+    ? `${apiUrl}/uploads/profiles/${user.profile_image || user.profileImage}`
+    : '/images/team-photo.jpg' // Fallback image
 
   return (
     <div className="min-h-screen py-8">
@@ -91,8 +119,8 @@ export default function DashboardPage() {
               {/* Avatar */}
               <div className="w-32 h-32 rounded-full border-4 border-card bg-card overflow-hidden flex-shrink-0">
                 <Image
-                  src={mockUser.avatar}
-                  alt={mockUser.name}
+                  src={profileImageUrl}
+                  alt={user.name || user.username}
                   width={128}
                   height={128}
                   className="w-full h-full object-cover"
@@ -104,9 +132,9 @@ export default function DashboardPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                      {mockUser.name}
+                      {user.name || user.username}
                     </h1>
-                    <p className="text-muted-foreground">@{mockUser.username}</p>
+                    <p className="text-muted-foreground">@{user.username}</p>
                   </div>
                   <div className="flex gap-3">
                     <Button
@@ -116,7 +144,10 @@ export default function DashboardPage() {
                       <Settings className="w-4 h-4 mr-2" />
                       Configuración
                     </Button>
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Button 
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                      onClick={() => setIsEditModalOpen(true)}
+                    >
                       <Edit3 className="w-4 h-4 mr-2" />
                       Editar Perfil
                     </Button>
@@ -127,51 +158,45 @@ export default function DashboardPage() {
 
             {/* Bio & Details */}
             <div className="mt-6 space-y-4">
-              <p className="text-foreground max-w-2xl">{mockUser.bio}</p>
+              {user.bio && (
+                <p className="text-foreground max-w-2xl">{user.bio}</p>
+              )}
 
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {mockUser.location}
-                </span>
-                <span className="flex items-center gap-1">
-                  <LinkIcon className="w-4 h-4" />
-                  <a
-                    href={`https://${mockUser.website}`}
-                    className="text-primary hover:underline"
-                  >
-                    {mockUser.website}
-                  </a>
-                </span>
-                <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  Se unió en {mockUser.joinedDate}
+                  Se unió en {joinedDate}
                 </span>
+                {user.email && (
+                  <span className="flex items-center gap-1 text-muted-foreground/80">
+                    📧 {user.email}
+                  </span>
+                )}
               </div>
 
               {/* Stats */}
               <div className="flex gap-4 sm:gap-8 pt-4 border-t border-border">
                 <div className="text-center px-4 py-2 rounded-xl bg-background/30 hover:bg-primary/10 transition-colors">
                   <p className="text-2xl font-bold text-foreground">
-                    {mockUser.stats.posts}
+                    {mockPosts.length}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">Publicaciones</p>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-background/30 hover:bg-primary/10 transition-colors">
                   <p className="text-2xl font-bold text-foreground">
-                    {mockUser.stats.followers}
+                    0
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">Seguidores</p>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-background/30 hover:bg-primary/10 transition-colors">
                   <p className="text-2xl font-bold text-foreground">
-                    {mockUser.stats.following}
+                    0
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">Siguiendo</p>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-primary/10 ring-1 ring-primary/30">
                   <p className="text-2xl font-bold text-primary">
-                    {mockUser.stats.likes}
+                    0
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">Me gusta</p>
                 </div>
@@ -323,6 +348,12 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+      />
     </div>
   )
 }
